@@ -66,7 +66,7 @@ fotoInput.addEventListener("change", function (event) {
 
       // Comprime para JPEG com 70% de qualidade (0.7)
       fotoComprimidaBase64 = canvas.toDataURL("image/jpeg", 0.7);
-
+      document.getElementById("foto-texto").style.display = "none";
       // Mostra a prévia no formulário
       previewFoto.src = fotoComprimidaBase64;
       previewFoto.style.display = "block";
@@ -99,7 +99,9 @@ form.addEventListener("submit", async (e) => {
 
     form.reset();
     previewFoto.style.display = "none";
-    fotoComprimidaBase64 = ""; // Limpa a variável
+    previewFoto.src = "";
+    document.getElementById("foto-texto").style.display = "block";
+    fotoComprimidaBase64 = "";
   } catch (e) {
     console.error("Erro: ", e);
     alert("Erro ao cadastrar!");
