@@ -32,10 +32,15 @@
         </div>
 
         <div class="form-group">
-          <label for="foto">Foto do Coelho</label>
-          <input type="file" id="foto" accept="image/*" required />
-          <!-- Prévia da imagem comprimida -->
-          <img id="preview-foto" alt="Prévia da foto" />
+          <label>Foto do Coelho</label>
+          <!-- Escondemos o input original e criamos uma área clicável -->
+          <div class="foto-upload-container">
+            <label for="foto" class="foto-placeholder-box">
+              <span id="foto-texto">📸 Clique para escolher uma foto</span>
+              <img id="preview-foto" alt="Prévia da foto" />
+            </label>
+            <input type="file" id="foto" accept="image/*" />
+          </div>
         </div>
 
         <div class="form-group">
