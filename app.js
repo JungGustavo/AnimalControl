@@ -33,6 +33,7 @@ let fotoComprimidaBase64 = "";
 // Elementos dos filtros
 const filtroNome = document.getElementById("filtro-nome");
 const filtroRaca = document.getElementById("filtro-raca");
+const filtroSexo = document.getElementById("filtro-sexo");
 const filtroNascimento = document.getElementById("filtro-nascimento");
 const btnLimparFiltros = document.getElementById("btn-limpar-filtros");
 
@@ -141,12 +142,17 @@ function aplicarFiltros() {
   const termoSexo = filtroSexo.value;
 
   const coelhosFiltrados = todosCoelhos.filter((coelho) => {
-    const bateNome = coelho.nome.toLowerCase().includes(termoNome);
-    const bateRaca = coelho.raca.toLowerCase().includes(termoRaca);
+    // As proteções (|| "") garantem que, se o dado for antigo/nulo, vira um texto vazio e não quebra o JS
+    const nomeBanco = (coelho.nome || "").toLowerCase();
+    const racaBanco = (coelho.raca || "").toLowerCase();
+    const nascBanco = coelho.nascimento || "";
+    const sexoBanco = coelho.sexo || "";
 
-    // Se a data do filtro estiver vazia, ignora o filtro de data (retorna true)
-    const bateNasc = termoNasc === "" ? true : coelho.nascimento === termoNasc;
-    const bateSexo = termoSexo === "" ? true : coelho.sexo === termoSexo;
+    const bateNome = nomeBanco.includes(termoNome);
+    const bateRaca = racaBanco.includes(termoRaca);
+    const bateNasc = termoNasc === "" ? true : nascBanco === termoNasc;
+    const bateSexo = termoSexo === "" ? true : sexoBanco === termoSexo;
+
     return bateNome && bateRaca && bateNasc && bateSexo;
   });
 
@@ -164,17 +170,26 @@ function renderizarNaTela(lista) {
   }
 
   lista.forEach((coelho) => {
-    const dataNasc = coelho.nascimento.split("-").reverse().join("/");
+    // Proteção para data de nascimento
+    let dataNasc = "Não informada";
+    if (coelho.nascimento) {
+      dataNasc = coelho.nascimento.split("-").reverse().join("/");
+    }
 
     const div = document.createElement("div");
     div.classList.add("cartao-coelho");
+
+    // Novo formato: Foto do lado esquerdo, e uma div "info-coelho" do lado direito
     div.innerHTML = `
-            <img src="${coelho.foto}" class="foto-lista" alt="Foto de ${coelho.nome}">
-            <strong>#${coelho.numero} - ${coelho.nome}</strong>
-            <span><strong>Raça:</strong> ${coelho.raca}</span>
-            <span><strong>Sexo:</strong> ${coelho.sexo || "Não informado"}</span>
-            <span><strong>Nascimento:</strong> ${dataNasc}</span>
-            ${coelho.observacoes ? `<p class="obs"><strong>Obs:</strong> ${coelho.observacoes}</p>` : ""}
+            <img src="${coelho.foto || ""}" class="foto-lista" alt="Foto de ${coelho.nome || "Coelho"}" onerror="this.style.display='none'">
+            
+            <div class="info-coelho">
+                <strong>#${coelho.numero || "S/N"} - ${coelho.nome || "Sem nome"}</strong>
+                <span><strong>Raça:</strong> ${coelho.raca || "Não informada"}</span>
+                <span><strong>Sexo:</strong> ${coelho.sexo || "Não informado"}</span>
+                <span><strong>Nascimento:</strong> ${dataNasc}</span>
+                ${coelho.observacoes ? `<p class="obs"><strong>Obs:</strong> ${coelho.observacoes}</p>` : ""}
+            </div>
         `;
     listaCoelhos.appendChild(div);
   });
