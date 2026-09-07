@@ -27,8 +27,14 @@ const form = document.getElementById("form-coelho");
 const listaCoelhos = document.getElementById("lista-coelhos");
 const fotoInput = document.getElementById("foto");
 const previewFoto = document.getElementById("preview-foto");
-
+let todosCoelhos = [];
 let fotoComprimidaBase64 = "";
+
+// Elementos dos filtros
+const filtroNome = document.getElementById("filtro-nome");
+const filtroRaca = document.getElementById("filtro-raca");
+const filtroNascimento = document.getElementById("filtro-nascimento");
+const btnLimparFiltros = document.getElementById("btn-limpar-filtros");
 
 fotoInput.addEventListener("change", function (event) {
   const file = event.target.files[0];
@@ -91,6 +97,7 @@ form.addEventListener("submit", async (e) => {
       numero: document.getElementById("numero").value,
       nome: document.getElementById("nome").value,
       raca: document.getElementById("raca").value,
+      sexo: document.getElementById("sexo").value,
       nascimento: document.getElementById("nascimento").value,
       observacoes: document.getElementById("observacoes").value,
       foto: fotoComprimidaBase64,
@@ -110,37 +117,82 @@ form.addEventListener("submit", async (e) => {
     btn.disabled = false;
   }
 });
-// Função para escutar as mudanças no banco e atualizar a tela em TEMPO REAL
 function lerCoelhos() {
-  // Ordena pelos cadastros mais recentes
   const q = query(collection(db, "coelhos"), orderBy("dataCadastro", "desc"));
 
   onSnapshot(q, (snapshot) => {
-    listaCoelhos.innerHTML = "";
-
-    if (snapshot.empty) {
-      listaCoelhos.innerHTML = "<p>Nenhum coelho cadastrado ainda.</p>";
-      return;
-    }
+    todosCoelhos = []; // Zera a lista antes de atualizar
 
     snapshot.forEach((doc) => {
-      const coelho = doc.data();
-
-      // Formata a data de YYYY-MM-DD para DD/MM/YYYY
-      const dataNasc = coelho.nascimento.split("-").reverse().join("/");
-
-      const div = document.createElement("div");
-      div.classList.add("cartao-coelho");
-      div.innerHTML = `
-                <img src="${coelho.foto}" class="foto-lista" alt="Foto de ${coelho.nome}">
-                <strong>#${coelho.numero} - ${coelho.nome}</strong>
-                <span><strong>Raça:</strong> ${coelho.raca}</span>
-                <span><strong>Nascimento:</strong> ${dataNasc}</span>
-                ${coelho.observacoes ? `<p class="obs"><strong>Obs:</strong> ${coelho.observacoes}</p>` : ""}
-            `;
-      listaCoelhos.appendChild(div);
+      // Guarda os dados e o ID do documento
+      todosCoelhos.push({ id: doc.id, ...doc.data() });
     });
+
+    // Após pegar do banco, chama a função que aplica os filtros
+    aplicarFiltros();
   });
 }
 
+// Função que filtra e joga na tela
+function aplicarFiltros() {
+  const termoNome = filtroNome.value.toLowerCase();
+  const termoRaca = filtroRaca.value.toLowerCase();
+  const termoNasc = filtroNascimento.value;
+  const termoSexo = filtroSexo.value;
+
+  const coelhosFiltrados = todosCoelhos.filter((coelho) => {
+    const bateNome = coelho.nome.toLowerCase().includes(termoNome);
+    const bateRaca = coelho.raca.toLowerCase().includes(termoRaca);
+
+    // Se a data do filtro estiver vazia, ignora o filtro de data (retorna true)
+    const bateNasc = termoNasc === "" ? true : coelho.nascimento === termoNasc;
+    const bateSexo = termoSexo === "" ? true : coelho.sexo === termoSexo;
+    return bateNome && bateRaca && bateNasc && bateSexo;
+  });
+
+  renderizarNaTela(coelhosFiltrados);
+}
+
+// Função que desenha o HTML na tela
+function renderizarNaTela(lista) {
+  listaCoelhos.innerHTML = "";
+
+  if (lista.length === 0) {
+    listaCoelhos.innerHTML =
+      '<p style="text-align:center; color:#7f8c8d;">Nenhum coelho encontrado.</p>';
+    return;
+  }
+
+  lista.forEach((coelho) => {
+    const dataNasc = coelho.nascimento.split("-").reverse().join("/");
+
+    const div = document.createElement("div");
+    div.classList.add("cartao-coelho");
+    div.innerHTML = `
+            <img src="${coelho.foto}" class="foto-lista" alt="Foto de ${coelho.nome}">
+            <strong>#${coelho.numero} - ${coelho.nome}</strong>
+            <span><strong>Raça:</strong> ${coelho.raca}</span>
+            <span><strong>Sexo:</strong> ${coelho.sexo || "Não informado"}</span>
+            <span><strong>Nascimento:</strong> ${dataNasc}</span>
+            ${coelho.observacoes ? `<p class="obs"><strong>Obs:</strong> ${coelho.observacoes}</p>` : ""}
+        `;
+    listaCoelhos.appendChild(div);
+  });
+}
+
+// Eventos (Listeners) para quando o usuário digitar ou mudar a data nos filtros
+filtroNome.addEventListener("input", aplicarFiltros);
+filtroRaca.addEventListener("input", aplicarFiltros);
+filtroNascimento.addEventListener("change", aplicarFiltros);
+filtroSexo.addEventListener("change", aplicarFiltros);
+// Botão de limpar filtros
+btnLimparFiltros.addEventListener("click", () => {
+  filtroNome.value = "";
+  filtroRaca.value = "";
+  filtroNascimento.value = "";
+  filtroSexo.value = "";
+  aplicarFiltros(); // Atualiza a tela mostrando todos novamente
+});
+
+// Inicia o sistema
 lerCoelhos();
