@@ -79,10 +79,13 @@ button:hover {
   background-color: #f8f9fa;
   border-left: 4px solid #3498db;
   padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  display: flex; /* Coloca lado a lado */
+  flex-direction: row; /* Coloca lado a lado */
+  align-items: flex-start;
+  gap: 15px; /* Espaço entre a foto e o texto */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .cartao-coelho strong {
@@ -122,11 +125,28 @@ textarea:focus {
 }
 
 .foto-lista {
-  width: 100%;
-  height: 200px;
+  width: 90px; /* Deixa a foto pequena (quadrada) */
+  height: 90px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 10px;
+  flex-shrink: 0; /* Impede a foto de ser esmagada pelo texto */
+}
+
+.info-coelho {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.info-coelho strong {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.info-coelho span {
+  margin-bottom: 4px;
+  font-size: 14px;
 }
 
 .cartao-coelho span {
@@ -135,7 +155,7 @@ textarea:focus {
 }
 
 .cartao-coelho p.obs {
-  margin-top: 10px;
+  margin-top: 8px;
   font-size: 13px;
   color: #666;
   background: #eee;
@@ -233,4 +253,14 @@ select {
 select:focus {
   outline: none;
   border-color: #3498db;
+}
+
+@media (max-width: 350px) {
+  .cartao-coelho {
+    flex-direction: column;
+  }
+  .foto-lista {
+    width: 100%;
+    height: 150px;
+  }
 }
