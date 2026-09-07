@@ -12,6 +12,11 @@
 
       <form id="form-coelho">
         <div class="form-group">
+          <label for="numero">Número/ID</label>
+          <input type="text" id="numero" placeholder="Ex: 001" required />
+        </div>
+
+        <div class="form-group">
           <label for="nome">Nome do Coelho</label>
           <input type="text" id="nome" placeholder="Ex: Floquinho" required />
         </div>
@@ -22,8 +27,24 @@
         </div>
 
         <div class="form-group">
-          <label for="idade">Idade (meses)</label>
-          <input type="number" id="idade" placeholder="Ex: 12" required />
+          <label for="nascimento">Data de Nascimento</label>
+          <input type="date" id="nascimento" required />
+        </div>
+
+        <div class="form-group">
+          <label for="foto">Foto do Coelho</label>
+          <input type="file" id="foto" accept="image/*" required />
+          <!-- Prévia da imagem comprimida -->
+          <img id="preview-foto" alt="Prévia da foto" />
+        </div>
+
+        <div class="form-group">
+          <label for="observacoes">Observações</label>
+          <textarea
+            id="observacoes"
+            rows="3"
+            placeholder="Detalhes de saúde, pelagem, etc."
+          ></textarea>
         </div>
 
         <button type="submit" id="btn-cadastrar">Cadastrar Coelho</button>
@@ -31,13 +52,10 @@
 
       <div class="lista-container">
         <h2>Coelhos Cadastrados</h2>
-        <div id="lista-coelhos">
-          <!-- Os coelhos aparecerão aqui -->
-        </div>
+        <div id="lista-coelhos"></div>
       </div>
     </div>
 
-    <!-- O type="module" é essencial para usar a versão mais recente do Firebase -->
     <script type="module" src="app.js"></script>
   </body>
 </html>
