@@ -3,108 +3,152 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cadastro de Coelhos</title>
+    <title>Gestão de Coelhos</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
-      <h1>🐰 Cadastro de Coelhos</h1>
+      <h1>Meus Coelhos</h1>
 
-      <form id="form-coelho">
-        <div class="form-group">
-          <label for="numero">Número/ID</label>
-          <input type="text" id="numero" placeholder="Ex: 001" required />
+      <!-- Menu de Navegação -->
+      <nav class="menu-superior">
+        <button id="tab-coelhos" class="aba-ativa">Coelhos</button>
+        <button id="tab-reproducao">Reprodução</button>
+      </nav>
+
+      <!-- SESSÃO 1: COELHOS -->
+      <section id="sec-coelhos">
+        <div class="acoes-topo">
+          <h2>Lista de Coelhos</h2>
+          <button id="btn-mostrar-form-coelho" class="btn-acao">
+            + Cadastrar Coelho
+          </button>
         </div>
 
-        <div class="form-group">
-          <label for="nome">Nome do Coelho</label>
-          <input type="text" id="nome" placeholder="Ex: Floquinho" required />
-        </div>
-
-        <div class="form-group">
-          <label for="raca">Raça</label>
-          <input type="text" id="raca" placeholder="Ex: Lionhead" required />
-        </div>
-
-        <div class="form-group">
-          <label for="sexo">Sexo</label>
-          <select id="sexo" required>
-            <option value="">Selecione...</option>
-            <option value="Macho">Macho</option>
-            <option value="Fêmea">Fêmea</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="nascimento">Data de Nascimento</label>
-          <input type="date" id="nascimento" required />
-        </div>
-
-        <div class="form-group">
-          <label>Foto do Coelho</label>
-          <!-- Escondemos o input original e criamos uma área clicável -->
-          <div class="foto-upload-container">
-            <label for="foto" class="foto-placeholder-box">
-              <span id="foto-texto">📸 Clique para escolher uma foto</span>
-              <img id="preview-foto" alt="Prévia da foto" />
-            </label>
-            <input type="file" id="foto" accept="image/*" />
+        <form id="form-coelho" class="escondido">
+          <!-- Campos do coelho iguais aos anteriores -->
+          <div class="form-group">
+            <label for="numero">Número/ID</label
+            ><input type="text" id="numero" required />
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="observacoes">Observações</label>
-          <textarea
-            id="observacoes"
-            rows="3"
-            placeholder="Detalhes de saúde, pelagem, etc."
-          ></textarea>
-        </div>
-
-        <button type="submit" id="btn-cadastrar">Cadastrar Coelho</button>
-      </form>
-
-      <div class="lista-container">
-        <h2>Coelhos Cadastrados</h2>
-
-          <!-- Nova Área de Filtros -->
-          <div class="filtros-container">
-            <div class="filtros-grid">
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="filtro-nome"
-                  placeholder="🔍 Buscar por nome..."
-                />
-              </div>
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="filtro-raca"
-                  placeholder="🔍 Buscar por raça..."
-                />
-              </div>
-              <div class="form-group">
-                <input type="date" id="filtro-nascimento" />
-              </div>
-              <div class="form-group">
-                <select id="filtro-sexo">
-                  <option value="">Todos os sexos</option>
-                  <option value="Macho">Macho</option>
-                  <option value="Fêmea">Fêmea</option>
-                </select>
-              </div>
+          <div class="form-group">
+            <label for="nome">Nome do Coelho</label
+            ><input type="text" id="nome" required />
+          </div>
+          <div class="form-group">
+            <label for="raca">Raça</label
+            ><input type="text" id="raca" required />
+          </div>
+          <div class="form-group">
+            <label for="sexo">Sexo</label>
+            <select id="sexo" required>
+              <option value="">Selecione...</option>
+              <option value="Macho">Macho</option>
+              <option value="Fêmea">Fêmea</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nascimento">Data de Nascimento</label
+            ><input type="date" id="nascimento" required />
+          </div>
+          <div class="form-group">
+            <label>Foto do Coelho</label>
+            <div class="foto-upload-container">
+              <label for="foto" class="foto-placeholder-box">
+                <span id="foto-texto">Clique para escolher uma foto</span>
+                <img id="preview-foto" alt="Prévia" />
+              </label>
+              <input type="file" id="foto" accept="image/*" required />
             </div>
-            <button id="btn-limpar-filtros" class="btn-secundario">
-              Limpar Filtros
+          </div>
+          <div class="form-group">
+            <label for="observacoes">Observações</label
+            ><textarea id="observacoes" rows="2"></textarea>
+          </div>
+
+          <div class="botoes-form">
+            <button type="submit" id="btn-cadastrar-coelho">
+              Salvar Coelho
+            </button>
+            <button type="button" id="btn-cancelar-coelho" class="btn-cancelar">
+              Cancelar
             </button>
           </div>
+        </form>
 
-          <div id="lista-coelhos"></div>
+        <div class="filtros-container">
+          <div class="filtros-grid">
+            <div class="form-group">
+              <input
+                type="text"
+                id="filtro-nome"
+                placeholder="🔍 Buscar nome..."
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                id="filtro-raca"
+                placeholder="🔍 Buscar raça..."
+              />
+            </div>
+            <div class="form-group">
+              <input type="date" id="filtro-nascimento" />
+            </div>
+            <div class="form-group">
+              <select id="filtro-sexo">
+                <option value="">Todos os sexos</option>
+                <option value="Macho">Macho</option>
+                <option value="Fêmea">Fêmea</option>
+              </select>
+            </div>
+          </div>
+          <button id="btn-limpar-filtros" class="btn-secundario">
+            Limpar Filtros
+          </button>
         </div>
-      </div>
-    </div>
 
+        <div id="lista-coelhos"></div>
+      </section>
+
+      <!-- SESSÃO 2: REPRODUÇÃO -->
+      <section id="sec-reproducao" class="escondido">
+        <div class="acoes-topo">
+          <h2>Partos Programados</h2>
+          <button id="btn-mostrar-form-parto" class="btn-acao">
+            + Adicionar Parto
+          </button>
+        </div>
+
+        <form id="form-reproducao" class="escondido">
+          <div class="form-group">
+            <label for="parto-femea">Selecione a Fêmea</label>
+            <select id="parto-femea" required>
+              <option value="">Carregando fêmeas...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="data-reproducao">Data do Cruzamento (Reprodução)</label>
+            <input type="date" id="data-reproducao" required />
+          </div>
+          <div class="form-group-checkbox">
+            <input type="checkbox" id="notificar-parto" checked />
+            <label for="notificar-parto"
+              >Receber notificação de parto em 30 dias</label
+            >
+          </div>
+
+          <div class="botoes-form">
+            <button type="submit" id="btn-cadastrar-parto">Salvar Parto</button>
+            <button type="button" id="btn-cancelar-parto" class="btn-cancelar">
+              Cancelar
+            </button>
+          </div>
+        </form>
+
+        <div id="lista-partos"></div>
+      </section>
+    </div>
     <script type="module" src="app.js"></script>
   </body>
 </html>
