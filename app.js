@@ -292,39 +292,7 @@ function lerCoberturas() {
     });
   });
 }
-
-// Leitura de Partos
 const listaPartos = document.getElementById("lista-partos");
-function lerPartos() {
-  // Agora lendo da collection "partos" (os antigos não aparecerão aqui, os novos sim)
-  const q = query(
-    collection(db, "partos"),
-    orderBy("dataPrevistaParto", "asc"),
-  );
-  onSnapshot(q, (snapshot) => {
-    listaPartos.innerHTML = "";
-    if (snapshot.empty) {
-      listaPartos.innerHTML = "<p>Nenhum parto programado.</p>";
-      return;
-    }
-
-    snapshot.forEach((doc) => {
-      const p = doc.data();
-      const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
-
-      const div = document.createElement("div");
-      div.classList.add("cartao-parto");
-      div.innerHTML = `
-                <h3>Nascimento: ${dataPrevStr}</h3>
-                <span><strong>Mãe:</strong> ${p.femea}</span>
-                <span><strong>Pai:</strong> ${p.macho}</span>
-                <span class="tag-notificacao">${p.status}</span>
-            `;
-      listaPartos.appendChild(div);
-    });
-  });
-}
-
 const formRegistroParto = document.getElementById("form-registro-parto");
 const textoAjudaPartos = document.getElementById("texto-ajuda-partos");
 
@@ -433,7 +401,6 @@ formRegistroParto.addEventListener("submit", async (e) => {
     alert("Erro ao registrar nascimento.");
   }
 });
-
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
