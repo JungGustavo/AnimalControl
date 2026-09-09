@@ -154,7 +154,51 @@
         <div class="acoes-topo">
           <h2>Controle de Partos</h2>
         </div>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
+
+        <!-- Formulário para registrar os nascimentos (oculto por padrão) -->
+        <form
+          id="form-registro-parto"
+          class="escondido"
+          style="
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #9b59b6;
+          "
+        >
+          <h3 style="margin-bottom: 15px; color: #8e44ad">
+            Quantos filhotes nasceram?
+          </h3>
+          <input type="hidden" id="id-parto-atual" />
+
+          <div class="form-group">
+            <label>Filhotes Vivos</label>
+            <input type="number" id="qtd-vivos" min="0" required />
+          </div>
+          <div class="form-group">
+            <label>Filhotes Mortos</label>
+            <input type="number" id="qtd-mortos" min="0" value="0" required />
+          </div>
+
+          <div class="botoes-form">
+            <button type="submit" style="background-color: #9b59b6">
+              Salvar Nascimento
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar-registro"
+              class="btn-cancelar"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+
+        <p
+          id="texto-ajuda-partos"
+          style="font-size: 13px; color: #666; margin-bottom: 15px"
+        >
           Os partos aparecem aqui automaticamente após o registro de uma
           cobertura.
         </p>
