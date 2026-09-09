@@ -325,7 +325,6 @@ function lerPartos() {
   });
 }
 
-const listaPartos = document.getElementById("lista-partos");
 const formRegistroParto = document.getElementById("form-registro-parto");
 const textoAjudaPartos = document.getElementById("texto-ajuda-partos");
 
