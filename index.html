@@ -209,8 +209,20 @@
           <input type="hidden" id="id-parto-desmame" />
 
           <div class="form-group">
-            <label>Filhotes Desmamados (Sobreviventes)</label>
+            <label>Quantidade de Filhotes</label>
             <input type="number" id="qtd-desmamados" min="0" required />
+          </div>
+          <!-- NOVO CAMPO: PESO MÉDIO -->
+          <div class="form-group">
+            <label>Peso Médio (kg ou gramas)</label>
+            <input
+              type="number"
+              id="peso-medio"
+              step="0.01"
+              min="0"
+              placeholder="Ex: 0.850"
+              required
+            />
           </div>
           <div class="form-group">
             <label>Data real do Desmame</label>
@@ -221,7 +233,7 @@
             <textarea
               id="obs-desmame"
               rows="2"
-              placeholder="Ex: 2 machos para engorda, 1 fêmea para matriz"
+              placeholder="Ex: 2 machos para engorda, 1 fêmea para reposição"
             ></textarea>
           </div>
 

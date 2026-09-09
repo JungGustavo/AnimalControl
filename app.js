@@ -366,66 +366,86 @@ function lerPartos() {
       let classeExtra = "";
       let tagVisual = "";
       let botaoAcao = "";
-      let detalhesExtra = "";
 
-      // 1. ESTÁGIO: AGUARDANDO PARTO
+      const formataData = (dataBase) =>
+        dataBase ? dataBase.split("-").reverse().join("/") : "";
+
+      // 1. Bloco Fixo: Cobertura
+      let htmlTimeline = `
+                <div style="margin-bottom: 8px; font-size: 15px;">
+                    <strong>Mãe:</strong> ${p.femea} <br>
+                    <strong>Pai:</strong> ${p.macho}
+                </div>
+                <div style="margin-bottom: 5px; font-size: 14px; color: #555;">
+                    ❤️ <strong>Cobertura:</strong> ${formataData(p.dataCruzamento)}
+                </div>
+            `;
+
+      // 2. Bloco: Parto (Previsão ou Realizado)
       if (p.status === "Aguardando Nascimento") {
-        const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
-        detalhesExtra = `<h3>Nascimento previsto: ${dataPrevStr}</h3>`;
+        htmlTimeline += `
+                    <div style="margin-bottom: 5px; font-size: 14px; color: #555;">
+                        ⏳ <strong>Previsão Parto:</strong> ${formataData(p.dataPrevistaParto)}
+                    </div>
+                `;
 
         if (p.dataPrevistaParto <= hoje) {
           classeExtra =
             p.dataPrevistaParto === hoje ? "parto-hoje" : "parto-atrasado";
           tagVisual = `<span class="tag-notificacao tag-alerta">🚨 ${p.dataPrevistaParto === hoje ? "É HOJE!" : "ATRASADO!"}</span>`;
-          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${id}')">Registrar Nascimento</button>`;
         } else {
           tagVisual = `<span class="tag-notificacao">⏳ Aguardando Parto</span>`;
         }
-      }
-      // 2. ESTÁGIO: PARTO ACONTECEU, AGUARDANDO DESMAME
-      else if (p.status === "Aguardando Desmame" || p.status === "Concluído") {
-        const dataPrevDesmameStr = p.dataPrevistaDesmame
-          .split("-")
-          .reverse()
-          .join("/");
-        detalhesExtra = `
-                    <h3>Desmame previsto: ${dataPrevDesmameStr}</h3>
-                    <span style="color:#27ae60; font-size:13px;">✅ Nasceram: ${p.vivos} Vivos | ${p.mortos} Mortos</span>
+        botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${id}')">Registrar Nascimento</button>`;
+      } else {
+        htmlTimeline += `
+                    <div style="margin-bottom: 5px; font-size: 14px; color: #27ae60;">
+                        🐰 <strong>Parto:</strong> ${formataData(p.dataNascimentoReal)} 
+                        <br> <span style="padding-left:20px; font-size:13px;">${p.vivos} Vivos | ${p.mortos} Mortos</span>
+                    </div>
                 `;
+      }
+
+      // 3. Bloco: Desmame (Previsão ou Realizado)
+      if (p.status === "Aguardando Desmame" || p.status === "Concluído") {
+        htmlTimeline += `
+                    <div style="margin-bottom: 5px; font-size: 14px; color: #555;">
+                        ⏳ <strong>Previsão Desmame:</strong> ${formataData(p.dataPrevistaDesmame)}
+                    </div>
+                `;
+
+        // O botão agora SEMPRE aparece assim que o parto acontece
+        botaoAcao = `<button class="btn-desmame" onclick="abrirFormDesmame('${id}', '${hoje}')">Registrar Desmame</button>`;
 
         if (p.dataPrevistaDesmame <= hoje) {
           classeExtra = "desmame-hoje";
           tagVisual = `<span class="tag-notificacao tag-info">🍼 Hora do Desmame!</span>`;
-          // Passa a data de hoje para já preencher o formulário
-          botaoAcao = `<button class="btn-desmame" onclick="abrirFormDesmame('${id}', '${hoje}')">Registrar Desmame</button>`;
         } else {
-          tagVisual = `<span class="tag-notificacao" style="background:#e0e0e0;">🍼 Em amamentação</span>`;
+          tagVisual = `<span class="tag-notificacao" style="background:#e0e0e0; color:#333;">🍼 Em amamentação</span>`;
         }
-      }
-      // 3. ESTÁGIO: DESMAME FINALIZADO (FIM DO CICLO)
-      else if (p.status === "Desmame Concluído") {
+      } else if (p.status === "Desmame Concluído") {
         classeExtra = "ciclo-encerrado";
-        detalhesExtra = `
-                    <h3 style="color:#8e44ad;">Ciclo Encerrado</h3>
-                    <span style="font-size:13px;">✅ Nascidos Vivos: ${p.vivos}</span>
-                    <span style="font-size:13px; color:#2980b9;">🐇 Desmamados: ${p.desmamados}</span>
-                    ${p.obsDesmame ? `<p class="obs" style="margin-top:5px;">Destino: ${p.obsDesmame}</p>` : ""}
+        htmlTimeline += `
+                    <div style="margin-bottom: 5px; font-size: 14px; color: #2980b9;">
+                        🍼 <strong>Desmame:</strong> ${formataData(p.dataDesmameReal)} 
+                        <br> <span style="padding-left:20px; font-size:13px;"><strong>${p.desmamados}</strong> Qtd | <strong>${p.pesoMedio}</strong> Peso Méd.</span>
+                        ${p.obsDesmame ? `<br> <span style="padding-left:20px; font-size:13px; color:#666;">Obs: ${p.obsDesmame}</span>` : ""}
+                    </div>
                 `;
-        tagVisual = `<span class="tag-notificacao" style="background:#8e44ad; color:white;">✨ Finalizado</span>`;
+        tagVisual = `<span class="tag-notificacao" style="background:#8e44ad; color:white;">✨ Ciclo Finalizado</span>`;
       }
 
+      // --- MONTA O CARTÃO FINAL ---
       const div = document.createElement("div");
       div.classList.add("cartao-parto");
       if (classeExtra) div.classList.add(classeExtra);
 
       div.innerHTML = `
-                ${detalhesExtra}
-                <div style="margin-top:8px; margin-bottom:8px;">
-                    <span><strong>Mãe:</strong> ${p.femea}</span>
-                    <span><strong>Pai:</strong> ${p.macho}</span>
+                ${htmlTimeline}
+                <div style="margin-top: 10px;">
+                    ${tagVisual}
+                    ${botaoAcao}
                 </div>
-                ${tagVisual}
-                ${botaoAcao}
             `;
       listaPartos.appendChild(div);
     });
@@ -499,6 +519,7 @@ formRegistroDesmame.addEventListener("submit", async (e) => {
     await updateDoc(doc(db, "partos", id), {
       status: "Desmame Concluído",
       desmamados: Number(document.getElementById("qtd-desmamados").value),
+      pesoMedio: document.getElementById("peso-medio").value, // NOVO: Salva o peso no banco
       dataDesmameReal: document.getElementById("data-desmame").value,
       obsDesmame: document.getElementById("obs-desmame").value,
     });
