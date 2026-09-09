@@ -8,12 +8,14 @@
   </head>
   <body>
     <div class="container">
-      <h1>Meus Coelhos</h1>
+      <h1>🐰 Meu Cunicultor</h1>
 
-      <!-- Menu de Navegação -->
+      <!-- Menu de Navegação Rolável para Celular -->
       <nav class="menu-superior">
         <button id="tab-coelhos" class="aba-ativa">Coelhos</button>
-        <button id="tab-reproducao">Reprodução</button>
+        <button id="tab-cobertura">Coberturas</button>
+        <button id="tab-partos">Partos</button>
+        <button id="tab-financeiro">Financeiro</button>
       </nav>
 
       <!-- SESSÃO 1: COELHOS -->
@@ -21,26 +23,22 @@
         <div class="acoes-topo">
           <h2>Lista de Coelhos</h2>
           <button id="btn-mostrar-form-coelho" class="btn-acao">
-            + Cadastrar Coelho
+            + Coelho
           </button>
         </div>
 
         <form id="form-coelho" class="escondido">
-          <!-- Campos do coelho iguais aos anteriores -->
           <div class="form-group">
-            <label for="numero">Número/ID</label
-            ><input type="text" id="numero" required />
+            <label>Número/ID</label><input type="text" id="numero" required />
           </div>
           <div class="form-group">
-            <label for="nome">Nome do Coelho</label
-            ><input type="text" id="nome" required />
+            <label>Nome</label><input type="text" id="nome" required />
           </div>
           <div class="form-group">
-            <label for="raca">Raça</label
-            ><input type="text" id="raca" required />
+            <label>Raça</label><input type="text" id="raca" required />
           </div>
           <div class="form-group">
-            <label for="sexo">Sexo</label>
+            <label>Sexo</label>
             <select id="sexo" required>
               <option value="">Selecione...</option>
               <option value="Macho">Macho</option>
@@ -48,21 +46,21 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="nascimento">Data de Nascimento</label
+            <label>Data Nascimento</label
             ><input type="date" id="nascimento" required />
           </div>
           <div class="form-group">
             <label>Foto do Coelho</label>
             <div class="foto-upload-container">
               <label for="foto" class="foto-placeholder-box">
-                <span id="foto-texto">Clique para escolher uma foto</span>
+                <span id="foto-texto">📸 Clique para foto</span>
                 <img id="preview-foto" alt="Prévia" />
               </label>
               <input type="file" id="foto" accept="image/*" required />
             </div>
           </div>
           <div class="form-group">
-            <label for="observacoes">Observações</label
+            <label>Observações</label
             ><textarea id="observacoes" rows="2"></textarea>
           </div>
 
@@ -76,6 +74,7 @@
           </div>
         </form>
 
+        <!-- Filtros omitidos aqui no HTML para não ficar gigante, mas eles estão presentes (mesmo código de antes) -->
         <div class="filtros-container">
           <div class="filtros-grid">
             <div class="form-group">
@@ -111,42 +110,69 @@
         <div id="lista-coelhos"></div>
       </section>
 
-      <!-- SESSÃO 2: REPRODUÇÃO -->
-      <section id="sec-reproducao" class="escondido">
+      <!-- SESSÃO 2: COBERTURA (NOVA) -->
+      <section id="sec-cobertura" class="escondido">
         <div class="acoes-topo">
-          <h2>Partos Programados</h2>
-          <button id="btn-mostrar-form-parto" class="btn-acao">
-            + Adicionar Parto
+          <h2>Histórico de Coberturas</h2>
+          <button id="btn-mostrar-form-cobertura" class="btn-acao">
+            + Cobertura
           </button>
         </div>
 
-        <form id="form-reproducao" class="escondido">
+        <form id="form-cobertura" class="escondido">
           <div class="form-group">
-            <label for="parto-femea">Selecione a Fêmea</label>
-            <select id="parto-femea" required>
-              <option value="">Carregando fêmeas...</option>
-            </select>
+            <label>Selecione a Fêmea</label>
+            <select id="cobertura-femea" required></select>
           </div>
           <div class="form-group">
-            <label for="data-reproducao">Data do Cruzamento (Reprodução)</label>
-            <input type="date" id="data-reproducao" required />
+            <label>Selecione o Macho</label>
+            <select id="cobertura-macho" required></select>
           </div>
-          <div class="form-group-checkbox">
-            <input type="checkbox" id="notificar-parto" checked />
-            <label for="notificar-parto"
-              >Receber notificação de parto em 30 dias</label
-            >
+          <div class="form-group">
+            <label>Data da Cobertura</label>
+            <input type="date" id="data-cobertura" required />
           </div>
-
           <div class="botoes-form">
-            <button type="submit" id="btn-cadastrar-parto">Salvar Parto</button>
-            <button type="button" id="btn-cancelar-parto" class="btn-cancelar">
+            <button type="submit" id="btn-cadastrar-cobertura">
+              Salvar Cobertura
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar-cobertura"
+              class="btn-cancelar"
+            >
               Cancelar
             </button>
           </div>
         </form>
 
+        <div id="lista-coberturas"></div>
+      </section>
+
+      <!-- SESSÃO 3: PARTOS (Será alterada no futuro) -->
+      <section id="sec-partos" class="escondido">
+        <div class="acoes-topo">
+          <h2>Controle de Partos</h2>
+        </div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
+          Os partos aparecem aqui automaticamente após o registro de uma
+          cobertura.
+        </p>
+
         <div id="lista-partos"></div>
+      </section>
+
+      <!-- SESSÃO 4: FINANCEIRO (NOVA) -->
+      <section id="sec-financeiro" class="escondido">
+        <div class="acoes-topo">
+          <h2>Financeiro</h2>
+        </div>
+        <div style="text-align: center; padding: 40px 0">
+          <h3 style="color: #7f8c8d">💰 Em breve!</h3>
+          <p style="color: #95a5a6; margin-top: 10px">
+            Aqui faremos o controle de despesas e receitas da criação.
+          </p>
+        </div>
       </section>
     </div>
     <script type="module" src="app.js"></script>
