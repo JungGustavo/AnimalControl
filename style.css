@@ -398,3 +398,62 @@ select:focus {
   font-weight: bold;
   margin-top: 5px;
 }
+
+/* --- ESTILOS DINÂMICOS PARA OS PARTOS --- */
+
+.cartao-parto.parto-hoje {
+  border-left-color: #e74c3c;
+  background-color: #fdf2e9; /* Fundo avermelhado bem clarinho */
+}
+
+.cartao-parto.parto-atrasado {
+  border-left-color: #c0392b;
+  background-color: #fadbd8;
+  opacity: 0.9;
+}
+
+.cartao-parto.parto-concluido {
+  border-left-color: #27ae60;
+  background-color: #f1f8e9;
+}
+
+.tag-alerta {
+  display: inline-block;
+  background: #e74c3c;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 5px;
+  animation: pulsar 2s infinite; /* Faz a tag piscar suavemente */
+}
+
+.tag-sucesso {
+  background: #27ae60;
+  color: white;
+  animation: none;
+}
+
+.btn-registrar-parto {
+  width: 100%;
+  margin-top: 12px;
+  background-color: #9b59b6;
+  padding: 10px;
+}
+
+.btn-registrar-parto:hover {
+  background-color: #8e44ad;
+}
+
+@keyframes pulsar {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

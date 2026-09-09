@@ -7,6 +7,8 @@ import {
   onSnapshot,
   query,
   orderBy,
+  doc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -57,7 +59,7 @@ let todosCoelhos = [];
 let fotoComprimidaBase64 = "";
 
 // ==========================================
-// MÓDULO 1: COELHOS (Mantido idêntico)
+// MÓDULO 1: COELHOS
 // ==========================================
 const fotoInput = document.getElementById("foto");
 const previewFoto = document.getElementById("preview-foto");
@@ -322,6 +324,116 @@ function lerPartos() {
     });
   });
 }
+
+const listaPartos = document.getElementById("lista-partos");
+const formRegistroParto = document.getElementById("form-registro-parto");
+const textoAjudaPartos = document.getElementById("texto-ajuda-partos");
+
+// Função para pegar a data de hoje no formato YYYY-MM-DD
+function obterDataDeHoje() {
+  const data = new Date();
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function lerPartos() {
+  const q = query(
+    collection(db, "partos"),
+    orderBy("dataPrevistaParto", "asc"),
+  );
+  onSnapshot(q, (snapshot) => {
+    listaPartos.innerHTML = "";
+    if (snapshot.empty) {
+      listaPartos.innerHTML = "<p>Nenhum parto programado.</p>";
+      return;
+    }
+
+    const hoje = obterDataDeHoje();
+
+    snapshot.forEach((docSnap) => {
+      const p = docSnap.data();
+      const idDoParto = docSnap.id; // Precisamos do ID para atualizar depois
+      const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
+
+      let classeExtra = "";
+      let tagVisual = `<span class="tag-notificacao">⏳ ${p.status}</span>`;
+      let botaoAcao = "";
+
+      // Verifica se o parto ainda não aconteceu
+      if (p.status === "Aguardando Nascimento") {
+        if (p.dataPrevistaParto === hoje) {
+          classeExtra = "parto-hoje";
+          tagVisual = `<span class="tag-notificacao tag-alerta">🚨 É HOJE!</span>`;
+          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${idDoParto}')">Registrar Nascimento</button>`;
+        } else if (p.dataPrevistaParto < hoje) {
+          classeExtra = "parto-atrasado";
+          tagVisual = `<span class="tag-notificacao tag-alerta">⚠️ ATRASADO!</span>`;
+          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${idDoParto}')">Registrar Nascimento</button>`;
+        }
+      } else {
+        // Se o status não for Aguardando, é porque já foi concluído
+        classeExtra = "parto-concluido";
+        tagVisual = `<span class="tag-notificacao tag-sucesso">✅ Nasceram: ${p.vivos} Vivos | ${p.mortos} Mortos</span>`;
+      }
+
+      const div = document.createElement("div");
+      div.classList.add("cartao-parto");
+      if (classeExtra) div.classList.add(classeExtra); // Adiciona a cor se for hoje, atrasado ou concluído
+
+      div.innerHTML = `
+                <h3>Nascimento: ${dataPrevStr}</h3>
+                <span><strong>Mãe:</strong> ${p.femea}</span>
+                <span><strong>Pai:</strong> ${p.macho}</span>
+                ${tagVisual}
+                ${botaoAcao}
+            `;
+      listaPartos.appendChild(div);
+    });
+  });
+}
+
+// Essa função precisa ser global (window) para o botão criado dinamicamente conseguir chamar
+window.abrirFormParto = function (id) {
+  document.getElementById("id-parto-atual").value = id;
+  formRegistroParto.classList.remove("escondido");
+  textoAjudaPartos.classList.add("escondido");
+  window.scrollTo(0, 0); // Joga a tela pra cima para a pessoa ver o formulário
+};
+
+document
+  .getElementById("btn-cancelar-registro")
+  .addEventListener("click", () => {
+    formRegistroParto.classList.add("escondido");
+    textoAjudaPartos.classList.remove("escondido");
+  });
+
+// Ação de Salvar os Nascimentos
+formRegistroParto.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("id-parto-atual").value;
+  const vivos = document.getElementById("qtd-vivos").value;
+  const mortos = document.getElementById("qtd-mortos").value;
+
+  try {
+    // Aponta para o documento exato no banco de dados e ATUALIZA os dados
+    const partoRef = doc(db, "partos", id);
+    await updateDoc(partoRef, {
+      status: "Concluído",
+      vivos: Number(vivos),
+      mortos: Number(mortos),
+      dataNascimentoReal: obterDataDeHoje(),
+    });
+
+    formRegistroParto.reset();
+    formRegistroParto.classList.add("escondido");
+    textoAjudaPartos.classList.remove("escondido");
+    alert("Nascimento registrado com sucesso!");
+  } catch (err) {
+    alert("Erro ao registrar nascimento.");
+  }
+});
 
 // Inicia as leituras
 lerCoelhos();
