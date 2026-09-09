@@ -267,28 +267,53 @@ select:focus {
 
 /* --- NOVOS ESTILOS PARA ABAS E BOTÕES --- */
 
+/* Atualização do Menu para caber 4 itens em telas pequenas */
 .menu-superior {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 25px;
   border-bottom: 2px solid #ecf0f1;
   padding-bottom: 10px;
+  overflow-x: auto; /* Permite rolar para os lados no celular */
+  white-space: nowrap; /* Impede que o texto quebre de linha */
+  -webkit-overflow-scrolling: touch; /* Suavidade no scroll do iPhone */
+}
+
+/* Esconde a barra de rolagem visualmente, mas mantém o scroll funcionando */
+.menu-superior::-webkit-scrollbar {
+  display: none;
 }
 
 .menu-superior button {
-  background-color: transparent;
+  background-color: #f1f2f6;
   color: #7f8c8d;
   border: none;
-  font-size: 16px;
-  padding: 10px 15px;
+  font-size: 14px; /* Fonte levemente menor para caber melhor */
+  padding: 10px 14px;
   cursor: pointer;
   font-weight: bold;
   border-radius: 8px;
+  flex-shrink: 0; /* Impede que os botões esmaguem uns aos outros */
 }
 
 .menu-superior button.aba-ativa {
   background-color: #3498db;
   color: white;
+}
+
+.cartao-cobertura {
+  background-color: #fff0f5; /* Fundo levemente rosado */
+  border-left: 4px solid #e84393;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.cartao-cobertura span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
 }
 
 .escondido {

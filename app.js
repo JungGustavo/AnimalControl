@@ -20,24 +20,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- NAVEGAÇÃO ENTRE ABAS ---
-const tabCoelhos = document.getElementById("tab-coelhos");
-const tabReproducao = document.getElementById("tab-reproducao");
-const secCoelhos = document.getElementById("sec-coelhos");
-const secReproducao = document.getElementById("sec-reproducao");
-
-tabCoelhos.addEventListener("click", () => {
-  tabCoelhos.classList.add("aba-ativa");
-  tabReproducao.classList.remove("aba-ativa");
-  secCoelhos.classList.remove("escondido");
-  secReproducao.classList.add("escondido");
-});
-
-tabReproducao.addEventListener("click", () => {
-  tabReproducao.classList.add("aba-ativa");
-  tabCoelhos.classList.remove("aba-ativa");
-  secReproducao.classList.remove("escondido");
-  secCoelhos.classList.add("escondido");
+// --- NAVEGAÇÃO INTELIGENTE DE ABAS ---
+const abas = ["coelhos", "cobertura", "partos", "financeiro"];
+abas.forEach((aba) => {
+  document.getElementById(`tab-${aba}`).addEventListener("click", () => {
+    abas.forEach((a) => {
+      document
+        .getElementById(`tab-${a}`)
+        .classList.toggle("aba-ativa", a === aba);
+      document
+        .getElementById(`sec-${a}`)
+        .classList.toggle("escondido", a !== aba);
+    });
+  });
 });
 
 // --- EXIBIR / ESCONDER FORMULÁRIOS ---
@@ -49,32 +44,27 @@ document
   .getElementById("btn-cancelar-coelho")
   .addEventListener("click", () => formCoelho.classList.add("escondido"));
 
-const formReproducao = document.getElementById("form-reproducao");
+const formCobertura = document.getElementById("form-cobertura");
 document
-  .getElementById("btn-mostrar-form-parto")
-  .addEventListener("click", () =>
-    formReproducao.classList.remove("escondido"),
-  );
+  .getElementById("btn-mostrar-form-cobertura")
+  .addEventListener("click", () => formCobertura.classList.remove("escondido"));
 document
-  .getElementById("btn-cancelar-parto")
-  .addEventListener("click", () => formReproducao.classList.add("escondido"));
+  .getElementById("btn-cancelar-cobertura")
+  .addEventListener("click", () => formCobertura.classList.add("escondido"));
 
 // --- VARIÁVEIS GLOBAIS ---
 let todosCoelhos = [];
 let fotoComprimidaBase64 = "";
 
 // ==========================================
-// MÓDULO 1: COELHOS
+// MÓDULO 1: COELHOS (Mantido idêntico)
 // ==========================================
-
-// Compressão de Foto
 const fotoInput = document.getElementById("foto");
 const previewFoto = document.getElementById("preview-foto");
 
 fotoInput.addEventListener("change", function (event) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onload = function (e) {
@@ -95,11 +85,9 @@ fotoInput.addEventListener("change", function (event) {
           height = 800;
         }
       }
-
       canvas.width = width;
       canvas.height = height;
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-
       fotoComprimidaBase64 = canvas.toDataURL("image/jpeg", 0.7);
       document.getElementById("foto-texto").style.display = "none";
       previewFoto.src = fotoComprimidaBase64;
@@ -108,14 +96,12 @@ fotoInput.addEventListener("change", function (event) {
   };
 });
 
-// Cadastro de Coelho
 formCoelho.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!fotoComprimidaBase64) {
     alert("Aguarde a foto carregar.");
     return;
   }
-
   const btn = document.getElementById("btn-cadastrar-coelho");
   btn.innerText = "Salvando...";
   btn.disabled = true;
@@ -131,12 +117,11 @@ formCoelho.addEventListener("submit", async (e) => {
       foto: fotoComprimidaBase64,
       dataCadastro: new Date(),
     });
-
     formCoelho.reset();
     previewFoto.style.display = "none";
     document.getElementById("foto-texto").style.display = "block";
     fotoComprimidaBase64 = "";
-    formCoelho.classList.add("escondido"); // Esconde ao salvar
+    formCoelho.classList.add("escondido");
   } catch (e) {
     alert("Erro ao cadastrar!");
   } finally {
@@ -145,7 +130,6 @@ formCoelho.addEventListener("submit", async (e) => {
   }
 });
 
-// Leitura e Filtros de Coelhos
 const filtroNome = document.getElementById("filtro-nome");
 const filtroRaca = document.getElementById("filtro-raca");
 const filtroNasc = document.getElementById("filtro-nascimento");
@@ -159,8 +143,7 @@ function lerCoelhos() {
     snapshot.forEach((doc) => {
       todosCoelhos.push({ id: doc.id, ...doc.data() });
     });
-
-    atualizarSelectFemeas(); // Atualiza a lista de mães na aba de reprodução
+    atualizarSelectsCobertura(); // Atualiza Machos e Fêmeas
     aplicarFiltros();
   });
 }
@@ -170,7 +153,6 @@ function aplicarFiltros() {
     tRaca = filtroRaca.value.toLowerCase();
   const tNasc = filtroNasc.value,
     tSexo = filtroSexo.value;
-
   const filtrados = todosCoelhos.filter((c) => {
     const bateNome = (c.nome || "").toLowerCase().includes(tNome);
     const bateRaca = (c.raca || "").toLowerCase().includes(tRaca);
@@ -181,30 +163,28 @@ function aplicarFiltros() {
 
   listaCoelhos.innerHTML = "";
   if (filtrados.length === 0) {
-    listaCoelhos.innerHTML = "<p>Nenhum coelho encontrado.</p>";
+    listaCoelhos.innerHTML = "<p>Nenhum coelho.</p>";
     return;
   }
-
   filtrados.forEach((c) => {
     let dataNasc = c.nascimento
       ? c.nascimento.split("-").reverse().join("/")
-      : "Não informada";
+      : "-";
     const div = document.createElement("div");
     div.classList.add("cartao-coelho");
     div.innerHTML = `
             <img src="${c.foto || ""}" class="foto-lista" onerror="this.style.display='none'">
             <div class="info-coelho">
-                <strong>#${c.numero || "S/N"} - ${c.nome || "Sem nome"}</strong>
+                <strong>#${c.numero || "S/N"} - ${c.nome || "S/N"}</strong>
                 <span><strong>Raça:</strong> ${c.raca || "-"}</span>
                 <span><strong>Sexo:</strong> ${c.sexo || "-"}</span>
                 <span><strong>Nascimento:</strong> ${dataNasc}</span>
-                ${c.observacoes ? `<p class="obs"><strong>Obs:</strong> ${c.observacoes}</p>` : ""}
+                ${c.observacoes ? `<p class="obs">Obs: ${c.observacoes}</p>` : ""}
             </div>
         `;
     listaCoelhos.appendChild(div);
   });
 }
-
 [filtroNome, filtroRaca, filtroNasc, filtroSexo].forEach((f) =>
   f.addEventListener("input", aplicarFiltros),
 );
@@ -217,67 +197,107 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 });
 
 // ==========================================
-// MÓDULO 2: REPRODUÇÃO
+// MÓDULO 2: COBERTURA E AUTOMAÇÃO DE PARTOS
 // ==========================================
 
-// Preenche o Select com as Fêmeas cadastradas
-function atualizarSelectFemeas() {
-  const select = document.getElementById("parto-femea");
-  select.innerHTML = '<option value="">Selecione a fêmea...</option>';
+function atualizarSelectsCobertura() {
+  const selFemea = document.getElementById("cobertura-femea");
+  const selMacho = document.getElementById("cobertura-macho");
+  selFemea.innerHTML = '<option value="">Selecione a fêmea...</option>';
+  selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
 
-  const femeas = todosCoelhos.filter((c) => c.sexo === "Fêmea");
-  femeas.forEach((f) => {
+  todosCoelhos.forEach((c) => {
     const option = document.createElement("option");
-    // O valor salvo no banco será o Nome e o Número da fêmea para facilitar a leitura depois
-    option.value = `${f.nome} | #${f.numero}`;
-    option.innerText = `${f.nome} | #${f.numero}`;
-    select.appendChild(option);
+    option.value = `${c.nome} | #${c.numero || "S/N"}`;
+    option.innerText = `${c.nome} | #${c.numero || "S/N"}`;
+
+    if (c.sexo === "Fêmea") selFemea.appendChild(option);
+    if (c.sexo === "Macho") selMacho.appendChild(option);
   });
 }
 
-// Cadastro de Reprodução/Parto
-formReproducao.addEventListener("submit", async (e) => {
+formCobertura.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  const btn = document.getElementById("btn-cadastrar-parto");
+  const btn = document.getElementById("btn-cadastrar-cobertura");
   btn.innerText = "Salvando...";
   btn.disabled = true;
 
-  // Pega a data de cruzamento
-  const dataCruzamento = document.getElementById("data-reproducao").value;
-
-  // Calcula a data prevista do parto (Data do cruzamento + 30 dias)
-  const dataPrevista = new Date(dataCruzamento);
-  dataPrevista.setDate(dataPrevista.getDate() + 30);
-  // Formata de volta para YYYY-MM-DD para salvar no banco
-  const stringDataPrevista = dataPrevista.toISOString().split("T")[0];
+  const femea = document.getElementById("cobertura-femea").value;
+  const macho = document.getElementById("cobertura-macho").value;
+  const dataCruz = document.getElementById("data-cobertura").value;
 
   try {
-    await addDoc(collection(db, "reproducoes"), {
-      femea: document.getElementById("parto-femea").value,
-      dataCruzamento: dataCruzamento,
-      dataPrevistaParto: stringDataPrevista,
-      notificar: document.getElementById("notificar-parto").checked,
+    // 1. Salva o histórico de Cobertura
+    const coberturaRef = await addDoc(collection(db, "coberturas"), {
+      femea: femea,
+      macho: macho,
+      dataCobertura: dataCruz,
       dataCadastro: new Date(),
     });
 
-    formReproducao.reset();
-    formReproducao.classList.add("escondido");
+    // 2. AUTOMAÇÃO: Gera o Parto somando 30 dias
+    const dataPrevista = new Date(dataCruz);
+    dataPrevista.setDate(dataPrevista.getDate() + 30);
+    const stringDataPrevista = dataPrevista.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+    await addDoc(collection(db, "partos"), {
+      // Mudamos a collection para 'partos' para ficar mais claro
+      coberturaId: coberturaRef.id,
+      femea: femea,
+      macho: macho,
+      dataCruzamento: dataCruz,
+      dataPrevistaParto: stringDataPrevista,
+      status: "Aguardando Nascimento", // Status que usaremos depois na sua atualização
+      dataCadastro: new Date(),
+    });
+
+    formCobertura.reset();
+    formCobertura.classList.add("escondido");
+    alert("Cobertura salva e Parto agendado automaticamente!"); // Alerta para confirmar a automação
   } catch (e) {
-    alert("Erro ao agendar parto!");
+    alert("Erro ao agendar cobertura!");
   } finally {
-    btn.innerText = "Salvar Parto";
+    btn.innerText = "Salvar Cobertura";
     btn.disabled = false;
   }
 });
 
-// Leitura da lista de Partos
-const listaPartos = document.getElementById("lista-partos");
-
-function lerPartos() {
+// Leitura de Coberturas
+const listaCoberturas = document.getElementById("lista-coberturas");
+function lerCoberturas() {
   const q = query(
-    collection(db, "reproducoes"),
-    orderBy("dataCruzamento", "desc"),
+    collection(db, "coberturas"),
+    orderBy("dataCobertura", "desc"),
+  );
+  onSnapshot(q, (snapshot) => {
+    listaCoberturas.innerHTML = "";
+    if (snapshot.empty) {
+      listaCoberturas.innerHTML = "<p>Nenhuma cobertura registrada.</p>";
+      return;
+    }
+
+    snapshot.forEach((doc) => {
+      const cob = doc.data();
+      const dataCob = cob.dataCobertura.split("-").reverse().join("/");
+      const div = document.createElement("div");
+      div.classList.add("cartao-cobertura");
+      div.innerHTML = `
+                <strong>❤️ Acasalamento: ${dataCob}</strong>
+                <span style="margin-top:8px;"><strong>Mãe:</strong> ${cob.femea}</span>
+                <span><strong>Pai:</strong> ${cob.macho}</span>
+            `;
+      listaCoberturas.appendChild(div);
+    });
+  });
+}
+
+// Leitura de Partos
+const listaPartos = document.getElementById("lista-partos");
+function lerPartos() {
+  // Agora lendo da collection "partos" (os antigos não aparecerão aqui, os novos sim)
+  const q = query(
+    collection(db, "partos"),
+    orderBy("dataPrevistaParto", "asc"),
   );
   onSnapshot(q, (snapshot) => {
     listaPartos.innerHTML = "";
@@ -288,18 +308,15 @@ function lerPartos() {
 
     snapshot.forEach((doc) => {
       const p = doc.data();
-
-      // Formatar datas para padrão brasileiro (DD/MM/YYYY)
-      const cruzamentoStr = p.dataCruzamento.split("-").reverse().join("/");
-      const previstaStr = p.dataPrevistaParto.split("-").reverse().join("/");
+      const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
 
       const div = document.createElement("div");
       div.classList.add("cartao-parto");
       div.innerHTML = `
-                <h3>Mãe: ${p.femea}</h3>
-                <span><strong>Cruzamento:</strong> ${cruzamentoStr}</span>
-                <span><strong>Data Prevista p/ Parto:</strong> ${previstaStr}</span>
-                ${p.notificar ? `<span class="tag-notificacao">🔔 Alerta ativado para 30 dias</span>` : ""}
+                <h3>Nascimento: ${dataPrevStr}</h3>
+                <span><strong>Mãe:</strong> ${p.femea}</span>
+                <span><strong>Pai:</strong> ${p.macho}</span>
+                <span class="tag-notificacao">${p.status}</span>
             `;
       listaPartos.appendChild(div);
     });
@@ -308,4 +325,5 @@ function lerPartos() {
 
 // Inicia as leituras
 lerCoelhos();
+lerCoberturas();
 lerPartos();
