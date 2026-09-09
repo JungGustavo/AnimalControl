@@ -201,7 +201,6 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 // ==========================================
 // MÓDULO 2: COBERTURA E AUTOMAÇÃO DE PARTOS
 // ==========================================
-
 function atualizarSelectsCobertura() {
   const selFemea = document.getElementById("cobertura-femea");
   const selMacho = document.getElementById("cobertura-macho");
@@ -212,59 +211,37 @@ function atualizarSelectsCobertura() {
     const option = document.createElement("option");
     option.value = `${c.nome} | #${c.numero || "S/N"}`;
     option.innerText = `${c.nome} | #${c.numero || "S/N"}`;
-
     if (c.sexo === "Fêmea") selFemea.appendChild(option);
     if (c.sexo === "Macho") selMacho.appendChild(option);
   });
 }
 
+// 1. Apenas salva a cobertura (sem gerar o parto ainda)
 formCobertura.addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = document.getElementById("btn-cadastrar-cobertura");
   btn.innerText = "Salvando...";
   btn.disabled = true;
 
-  const femea = document.getElementById("cobertura-femea").value;
-  const macho = document.getElementById("cobertura-macho").value;
-  const dataCruz = document.getElementById("data-cobertura").value;
-
   try {
-    // 1. Salva o histórico de Cobertura
-    const coberturaRef = await addDoc(collection(db, "coberturas"), {
-      femea: femea,
-      macho: macho,
-      dataCobertura: dataCruz,
+    await addDoc(collection(db, "coberturas"), {
+      femea: document.getElementById("cobertura-femea").value,
+      macho: document.getElementById("cobertura-macho").value,
+      dataCobertura: document.getElementById("data-cobertura").value,
+      partoConfirmado: false, // FLAG que diz se já gerou parto ou não
       dataCadastro: new Date(),
     });
-
-    // 2. AUTOMAÇÃO: Gera o Parto somando 30 dias
-    const dataPrevista = new Date(dataCruz);
-    dataPrevista.setDate(dataPrevista.getDate() + 30);
-    const stringDataPrevista = dataPrevista.toISOString().split("T")[0]; // Formato YYYY-MM-DD
-
-    await addDoc(collection(db, "partos"), {
-      // Mudamos a collection para 'partos' para ficar mais claro
-      coberturaId: coberturaRef.id,
-      femea: femea,
-      macho: macho,
-      dataCruzamento: dataCruz,
-      dataPrevistaParto: stringDataPrevista,
-      status: "Aguardando Nascimento", // Status que usaremos depois na sua atualização
-      dataCadastro: new Date(),
-    });
-
     formCobertura.reset();
     formCobertura.classList.add("escondido");
-    alert("Cobertura salva e Parto agendado automaticamente!"); // Alerta para confirmar a automação
   } catch (e) {
-    alert("Erro ao agendar cobertura!");
+    alert("Erro ao salvar cobertura!");
   } finally {
     btn.innerText = "Salvar Cobertura";
     btn.disabled = false;
   }
 });
 
-// Leitura de Coberturas
+// 2. Leitura de Coberturas (Com Botão de Confirmar)
 const listaCoberturas = document.getElementById("lista-coberturas");
 function lerCoberturas() {
   const q = query(
@@ -278,20 +255,86 @@ function lerCoberturas() {
       return;
     }
 
-    snapshot.forEach((doc) => {
-      const cob = doc.data();
+    snapshot.forEach((docSnap) => {
+      const cob = docSnap.data();
+      const idCob = docSnap.id;
       const dataCob = cob.dataCobertura.split("-").reverse().join("/");
+
+      // Verifica se o parto já foi confirmado para mostrar botão ou uma tag verde
+      let areaAcao = "";
+      if (!cob.partoConfirmado) {
+        // Passa os dados para a função do modal
+        areaAcao = `<button class="btn-acao btn-pequeno" onclick="prepararConfirmacaoParto('${idCob}', '${cob.femea}', '${cob.macho}', '${cob.dataCobertura}')">Confirmar Parto</button>`;
+      } else {
+        areaAcao = `<span class="tag-notificacao tag-sucesso" style="margin-top:10px;">✅ Prenhez Confirmada</span>`;
+      }
+
       const div = document.createElement("div");
       div.classList.add("cartao-cobertura");
       div.innerHTML = `
                 <strong>❤️ Acasalamento: ${dataCob}</strong>
                 <span style="margin-top:8px;"><strong>Mãe:</strong> ${cob.femea}</span>
                 <span><strong>Pai:</strong> ${cob.macho}</span>
+                <div>${areaAcao}</div>
             `;
       listaCoberturas.appendChild(div);
     });
   });
 }
+
+// 3. Lógica do Modal de Dupla Confirmação
+let dadosPartoPendente = null; // Guarda os dados temporariamente
+const modalConfirmacao = document.getElementById("modal-confirmacao");
+
+window.prepararConfirmacaoParto = function (id, femea, macho, dataCruz) {
+  dadosPartoPendente = { id, femea, macho, dataCruz };
+  modalConfirmacao.classList.remove("escondido");
+};
+
+document.getElementById("btn-cancelar-modal").addEventListener("click", () => {
+  modalConfirmacao.classList.add("escondido");
+  dadosPartoPendente = null;
+});
+
+document
+  .getElementById("btn-confirmar-modal")
+  .addEventListener("click", async () => {
+    if (!dadosPartoPendente) return;
+
+    const btn = document.getElementById("btn-confirmar-modal");
+    btn.innerText = "Aguarde...";
+    btn.disabled = true;
+
+    try {
+      // Calcula a data +30 dias
+      const dataPrevista = new Date(dadosPartoPendente.dataCruz);
+      dataPrevista.setDate(dataPrevista.getDate() + 30);
+      const stringDataPrevista = dataPrevista.toISOString().split("T")[0];
+
+      // Cria o Parto
+      await addDoc(collection(db, "partos"), {
+        coberturaId: dadosPartoPendente.id,
+        femea: dadosPartoPendente.femea,
+        macho: dadosPartoPendente.macho,
+        dataCruzamento: dadosPartoPendente.dataCruz,
+        dataPrevistaParto: stringDataPrevista,
+        status: "Aguardando Nascimento",
+        dataCadastro: new Date(),
+      });
+
+      // Atualiza a cobertura, dizendo que o parto foi confirmado (esconde o botão)
+      const cobRef = doc(db, "coberturas", dadosPartoPendente.id);
+      await updateDoc(cobRef, { partoConfirmado: true });
+
+      modalConfirmacao.classList.add("escondido");
+    } catch (e) {
+      alert("Erro ao confirmar parto.");
+    } finally {
+      btn.innerText = "Confirmar";
+      btn.disabled = false;
+      dadosPartoPendente = null;
+    }
+  });
 const listaPartos = document.getElementById("lista-partos");
 const formRegistroParto = document.getElementById("form-registro-parto");
 const textoAjudaPartos = document.getElementById("texto-ajuda-partos");
