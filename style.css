@@ -499,3 +499,31 @@ select:focus {
   font-size: 13px;
   margin-top: 10px;
 }
+
+/* --- ESTILOS PARA DESMAME --- */
+.cartao-parto.desmame-hoje {
+  border-left-color: #3498db;
+  background-color: #ebf5fb;
+}
+
+.cartao-parto.ciclo-encerrado {
+  border-left-color: #8e44ad; /* Roxo para ciclo totalmente finalizado */
+  background-color: #f5eef8;
+  opacity: 0.85; /* Fica levemente transparente indicando que acabou */
+}
+
+.tag-info {
+  background: #3498db;
+  color: white;
+}
+
+.btn-desmame {
+  width: 100%;
+  margin-top: 12px;
+  background-color: #3498db;
+  padding: 10px;
+}
+
+.btn-desmame:hover {
+  background-color: #2980b9;
+}
