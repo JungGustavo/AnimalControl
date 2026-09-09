@@ -194,7 +194,50 @@
             </button>
           </div>
         </form>
+        <form
+          id="form-registro-desmame"
+          class="escondido"
+          style="
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #3498db;
+          "
+        >
+          <h3 style="margin-bottom: 15px; color: #2980b9">Registrar Desmame</h3>
+          <input type="hidden" id="id-parto-desmame" />
 
+          <div class="form-group">
+            <label>Filhotes Desmamados (Sobreviventes)</label>
+            <input type="number" id="qtd-desmamados" min="0" required />
+          </div>
+          <div class="form-group">
+            <label>Data real do Desmame</label>
+            <input type="date" id="data-desmame" required />
+          </div>
+          <div class="form-group">
+            <label>Observações / Destino</label>
+            <textarea
+              id="obs-desmame"
+              rows="2"
+              placeholder="Ex: 2 machos para engorda, 1 fêmea para matriz"
+            ></textarea>
+          </div>
+
+          <div class="botoes-form">
+            <button type="submit" style="background-color: #3498db">
+              Salvar Desmame
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar-desmame"
+              class="btn-cancelar"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
         <p
           id="texto-ajuda-partos"
           style="font-size: 13px; color: #666; margin-bottom: 15px"

@@ -335,28 +335,25 @@ document
       dadosPartoPendente = null;
     }
   });
+
+// --- LÓGICA INTELIGENTE DE PARTOS E DESMAME ---
 const listaPartos = document.getElementById("lista-partos");
 const formRegistroParto = document.getElementById("form-registro-parto");
+const formRegistroDesmame = document.getElementById("form-registro-desmame");
 const textoAjudaPartos = document.getElementById("texto-ajuda-partos");
 
-// Função para pegar a data de hoje no formato YYYY-MM-DD
 function obterDataDeHoje() {
   const data = new Date();
-  const ano = data.getFullYear();
-  const mes = String(data.getMonth() + 1).padStart(2, "0");
-  const dia = String(data.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
 }
 
+// LER PARTOS
 function lerPartos() {
-  const q = query(
-    collection(db, "partos"),
-    orderBy("dataPrevistaParto", "asc"),
-  );
+  const q = query(collection(db, "partos"), orderBy("dataCadastro", "desc"));
   onSnapshot(q, (snapshot) => {
     listaPartos.innerHTML = "";
     if (snapshot.empty) {
-      listaPartos.innerHTML = "<p>Nenhum parto programado.</p>";
+      listaPartos.innerHTML = "<p>Nenhum registro encontrado.</p>";
       return;
     }
 
@@ -364,38 +361,69 @@ function lerPartos() {
 
     snapshot.forEach((docSnap) => {
       const p = docSnap.data();
-      const idDoParto = docSnap.id; // Precisamos do ID para atualizar depois
-      const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
+      const id = docSnap.id;
 
       let classeExtra = "";
-      let tagVisual = `<span class="tag-notificacao">⏳ ${p.status}</span>`;
+      let tagVisual = "";
       let botaoAcao = "";
+      let detalhesExtra = "";
 
-      // Verifica se o parto ainda não aconteceu
+      // 1. ESTÁGIO: AGUARDANDO PARTO
       if (p.status === "Aguardando Nascimento") {
-        if (p.dataPrevistaParto === hoje) {
-          classeExtra = "parto-hoje";
-          tagVisual = `<span class="tag-notificacao tag-alerta">🚨 É HOJE!</span>`;
-          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${idDoParto}')">Registrar Nascimento</button>`;
-        } else if (p.dataPrevistaParto < hoje) {
-          classeExtra = "parto-atrasado";
-          tagVisual = `<span class="tag-notificacao tag-alerta">⚠️ ATRASADO!</span>`;
-          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${idDoParto}')">Registrar Nascimento</button>`;
+        const dataPrevStr = p.dataPrevistaParto.split("-").reverse().join("/");
+        detalhesExtra = `<h3>Nascimento previsto: ${dataPrevStr}</h3>`;
+
+        if (p.dataPrevistaParto <= hoje) {
+          classeExtra =
+            p.dataPrevistaParto === hoje ? "parto-hoje" : "parto-atrasado";
+          tagVisual = `<span class="tag-notificacao tag-alerta">🚨 ${p.dataPrevistaParto === hoje ? "É HOJE!" : "ATRASADO!"}</span>`;
+          botaoAcao = `<button class="btn-registrar-parto" onclick="abrirFormParto('${id}')">Registrar Nascimento</button>`;
+        } else {
+          tagVisual = `<span class="tag-notificacao">⏳ Aguardando Parto</span>`;
         }
-      } else {
-        // Se o status não for Aguardando, é porque já foi concluído
-        classeExtra = "parto-concluido";
-        tagVisual = `<span class="tag-notificacao tag-sucesso">✅ Nasceram: ${p.vivos} Vivos | ${p.mortos} Mortos</span>`;
+      }
+      // 2. ESTÁGIO: PARTO ACONTECEU, AGUARDANDO DESMAME
+      else if (p.status === "Aguardando Desmame" || p.status === "Concluído") {
+        const dataPrevDesmameStr = p.dataPrevistaDesmame
+          .split("-")
+          .reverse()
+          .join("/");
+        detalhesExtra = `
+                    <h3>Desmame previsto: ${dataPrevDesmameStr}</h3>
+                    <span style="color:#27ae60; font-size:13px;">✅ Nasceram: ${p.vivos} Vivos | ${p.mortos} Mortos</span>
+                `;
+
+        if (p.dataPrevistaDesmame <= hoje) {
+          classeExtra = "desmame-hoje";
+          tagVisual = `<span class="tag-notificacao tag-info">🍼 Hora do Desmame!</span>`;
+          // Passa a data de hoje para já preencher o formulário
+          botaoAcao = `<button class="btn-desmame" onclick="abrirFormDesmame('${id}', '${hoje}')">Registrar Desmame</button>`;
+        } else {
+          tagVisual = `<span class="tag-notificacao" style="background:#e0e0e0;">🍼 Em amamentação</span>`;
+        }
+      }
+      // 3. ESTÁGIO: DESMAME FINALIZADO (FIM DO CICLO)
+      else if (p.status === "Desmame Concluído") {
+        classeExtra = "ciclo-encerrado";
+        detalhesExtra = `
+                    <h3 style="color:#8e44ad;">Ciclo Encerrado</h3>
+                    <span style="font-size:13px;">✅ Nascidos Vivos: ${p.vivos}</span>
+                    <span style="font-size:13px; color:#2980b9;">🐇 Desmamados: ${p.desmamados}</span>
+                    ${p.obsDesmame ? `<p class="obs" style="margin-top:5px;">Destino: ${p.obsDesmame}</p>` : ""}
+                `;
+        tagVisual = `<span class="tag-notificacao" style="background:#8e44ad; color:white;">✨ Finalizado</span>`;
       }
 
       const div = document.createElement("div");
       div.classList.add("cartao-parto");
-      if (classeExtra) div.classList.add(classeExtra); // Adiciona a cor se for hoje, atrasado ou concluído
+      if (classeExtra) div.classList.add(classeExtra);
 
       div.innerHTML = `
-                <h3>Nascimento: ${dataPrevStr}</h3>
-                <span><strong>Mãe:</strong> ${p.femea}</span>
-                <span><strong>Pai:</strong> ${p.macho}</span>
+                ${detalhesExtra}
+                <div style="margin-top:8px; margin-bottom:8px;">
+                    <span><strong>Mãe:</strong> ${p.femea}</span>
+                    <span><strong>Pai:</strong> ${p.macho}</span>
+                </div>
                 ${tagVisual}
                 ${botaoAcao}
             `;
@@ -404,12 +432,22 @@ function lerPartos() {
   });
 }
 
-// Essa função precisa ser global (window) para o botão criado dinamicamente conseguir chamar
+// FUNÇÕES DE ABRIR/FECHAR FORMS
 window.abrirFormParto = function (id) {
   document.getElementById("id-parto-atual").value = id;
   formRegistroParto.classList.remove("escondido");
+  formRegistroDesmame.classList.add("escondido");
   textoAjudaPartos.classList.add("escondido");
-  window.scrollTo(0, 0); // Joga a tela pra cima para a pessoa ver o formulário
+  window.scrollTo(0, 0);
+};
+
+window.abrirFormDesmame = function (id, hoje) {
+  document.getElementById("id-parto-desmame").value = id;
+  document.getElementById("data-desmame").value = hoje; // Pré-preenche com hoje
+  formRegistroDesmame.classList.remove("escondido");
+  formRegistroParto.classList.add("escondido");
+  textoAjudaPartos.classList.add("escondido");
+  window.scrollTo(0, 0);
 };
 
 document
@@ -418,32 +456,60 @@ document
     formRegistroParto.classList.add("escondido");
     textoAjudaPartos.classList.remove("escondido");
   });
+document
+  .getElementById("btn-cancelar-desmame")
+  .addEventListener("click", () => {
+    formRegistroDesmame.classList.add("escondido");
+    textoAjudaPartos.classList.remove("escondido");
+  });
 
-// Ação de Salvar os Nascimentos
+// SALVAR REGISTRO DE PARTO
 formRegistroParto.addEventListener("submit", async (e) => {
   e.preventDefault();
   const id = document.getElementById("id-parto-atual").value;
-  const vivos = document.getElementById("qtd-vivos").value;
-  const mortos = document.getElementById("qtd-mortos").value;
+  const dataNascimento = obterDataDeHoje();
+
+  // Calcula Desmame (35 dias após o nascimento)
+  const dataDesmame = new Date(dataNascimento);
+  dataDesmame.setDate(dataDesmame.getDate() + 35);
+  const dataPrevistaDesmame = dataDesmame.toISOString().split("T")[0];
 
   try {
-    // Aponta para o documento exato no banco de dados e ATUALIZA os dados
-    const partoRef = doc(db, "partos", id);
-    await updateDoc(partoRef, {
-      status: "Concluído",
-      vivos: Number(vivos),
-      mortos: Number(mortos),
-      dataNascimentoReal: obterDataDeHoje(),
+    await updateDoc(doc(db, "partos", id), {
+      status: "Aguardando Desmame",
+      vivos: Number(document.getElementById("qtd-vivos").value),
+      mortos: Number(document.getElementById("qtd-mortos").value),
+      dataNascimentoReal: dataNascimento,
+      dataPrevistaDesmame: dataPrevistaDesmame,
     });
-
     formRegistroParto.reset();
     formRegistroParto.classList.add("escondido");
     textoAjudaPartos.classList.remove("escondido");
-    alert("Nascimento registrado com sucesso!");
   } catch (err) {
     alert("Erro ao registrar nascimento.");
   }
 });
+
+// SALVAR REGISTRO DE DESMAME
+formRegistroDesmame.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("id-parto-desmame").value;
+
+  try {
+    await updateDoc(doc(db, "partos", id), {
+      status: "Desmame Concluído",
+      desmamados: Number(document.getElementById("qtd-desmamados").value),
+      dataDesmameReal: document.getElementById("data-desmame").value,
+      obsDesmame: document.getElementById("obs-desmame").value,
+    });
+    formRegistroDesmame.reset();
+    formRegistroDesmame.classList.add("escondido");
+    textoAjudaPartos.classList.remove("escondido");
+  } catch (err) {
+    alert("Erro ao registrar desmame.");
+  }
+});
+
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
