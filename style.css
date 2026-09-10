@@ -527,3 +527,94 @@ select:focus {
 .btn-desmame:hover {
   background-color: #2980b9;
 }
+
+/* --- ESTILOS DO MÓDULO FINANCEIRO --- */
+
+.resumo-financeiro {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.caixa-resumo {
+  flex: 1;
+  padding: 15px 5px;
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+  transition: 0.3s;
+}
+
+.caixa-resumo span {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.caixa-resumo strong {
+  font-size: 16px;
+}
+
+.caixa-resumo.entrada {
+  background-color: #27ae60;
+}
+.caixa-resumo.saida {
+  background-color: #e74c3c;
+}
+.caixa-resumo.saldo {
+  background-color: #2c3e50;
+} /* Cor muda via JS dependendo do lucro/prejuízo */
+
+.cartao-financa {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #ccc;
+}
+
+.cartao-financa.entrada {
+  border-left-color: #27ae60;
+}
+.cartao-financa.saida {
+  border-left-color: #e74c3c;
+}
+
+.financa-info {
+  width: 70%;
+}
+.financa-info h4 {
+  margin-bottom: 5px;
+  color: #2c3e50;
+  font-size: 15px;
+}
+.financa-info span {
+  display: block;
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-bottom: 2px;
+}
+
+.financa-valor {
+  width: 30%;
+  text-align: right;
+  font-weight: bold;
+  font-size: 16px;
+}
+.financa-valor.entrada {
+  color: #27ae60;
+}
+.financa-valor.saida {
+  color: #c0392b;
+}
+
+@media (min-width: 600px) {
+  .caixa-resumo strong {
+    font-size: 20px;
+  }
+}

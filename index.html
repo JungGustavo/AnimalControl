@@ -261,17 +261,154 @@
         <div id="lista-partos"></div>
       </section>
 
-      <!-- SESSÃO 4: FINANCEIRO (NOVA) -->
+      <!-- SESSÃO 4: FINANCEIRO -->
       <section id="sec-financeiro" class="escondido">
         <div class="acoes-topo">
-          <h2>Financeiro</h2>
+          <h2>Gestão Financeira</h2>
+          <button
+            id="btn-mostrar-form-financeiro"
+            class="btn-acao"
+            style="background-color: #27ae60"
+          >
+            + Lançamento
+          </button>
         </div>
-        <div style="text-align: center; padding: 40px 0">
-          <h3 style="color: #7f8c8d">💰 Em breve!</h3>
-          <p style="color: #95a5a6; margin-top: 10px">
-            Aqui faremos o controle de despesas e receitas da criação.
-          </p>
+
+        <!-- Formulário Financeiro -->
+        <form
+          id="form-financeiro"
+          class="escondido"
+          style="
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #27ae60;
+          "
+        >
+          <h3 style="margin-bottom: 15px; color: #27ae60">Novo Lançamento</h3>
+
+          <div class="form-group">
+            <label>Tipo de Movimentação</label>
+            <select id="fin-tipo" required>
+              <option value="">Selecione...</option>
+              <option value="Entrada">Receita (Entrada)</option>
+              <option value="Saída">Despesa (Saída)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="fin-data" required />
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input
+              type="number"
+              id="fin-valor"
+              step="0.01"
+              min="0.01"
+              placeholder="Ex: 150.00"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="fin-categoria" required>
+              <option value="">Selecione...</option>
+              <option value="Compra/Venda de Coelho">
+                Compra/Venda de Coelho
+              </option>
+              <option value="Ração e Alimentação">Ração e Alimentação</option>
+              <option value="Medicamentos/Veterinário">
+                Medicamentos / Veterinário
+              </option>
+              <option value="Acessórios e Instalações">
+                Acessórios e Instalações (Gaiolas)
+              </option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea
+              id="fin-descricao"
+              rows="2"
+              placeholder="Ex: Venda de 2 filhotes, Compra de ração 20kg..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="botoes-form">
+            <button
+              type="submit"
+              id="btn-salvar-fin"
+              style="background-color: #27ae60"
+            >
+              Salvar Lançamento
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar-financeiro"
+              class="btn-cancelar"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+
+        <!-- Filtros Financeiros -->
+        <div class="filtros-container">
+          <div
+            class="filtros-grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr))"
+          >
+            <div class="form-group">
+              <label>Mês / Ano</label>
+              <input type="month" id="filtro-fin-mes" />
+            </div>
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="filtro-fin-tipo">
+                <option value="">Todos</option>
+                <option value="Entrada">Apenas Entradas</option>
+                <option value="Saída">Apenas Saídas</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Categoria</label>
+              <select id="filtro-fin-categoria">
+                <option value="">Todas as Categorias</option>
+                <option value="Compra/Venda de Coelho">Compra/Venda</option>
+                <option value="Ração e Alimentação">Ração</option>
+                <option value="Medicamentos/Veterinário">Saúde</option>
+                <option value="Acessórios e Instalações">Estrutura</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+          </div>
+          <button id="btn-limpar-filtros-fin" class="btn-secundario">
+            Limpar Filtros
+          </button>
         </div>
+
+        <!-- Painel de Resumo -->
+        <div class="resumo-financeiro">
+          <div class="caixa-resumo entrada">
+            <span>Entradas</span>
+            <strong id="resumo-entradas">R$ 0,00</strong>
+          </div>
+          <div class="caixa-resumo saida">
+            <span>Saídas</span>
+            <strong id="resumo-saidas">R$ 0,00</strong>
+          </div>
+          <div class="caixa-resumo saldo">
+            <span>Saldo</span>
+            <strong id="resumo-saldo">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <!-- Lista de lançamentos -->
+        <div id="lista-financeiro"></div>
       </section>
     </div>
     <!-- MODAL DE CONFIRMAÇÃO DE PARTO -->

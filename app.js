@@ -470,6 +470,17 @@ window.abrirFormDesmame = function (id, hoje) {
   window.scrollTo(0, 0);
 };
 
+const formFinanceiro = document.getElementById("form-financeiro");
+document
+  .getElementById("btn-mostrar-form-financeiro")
+  .addEventListener("click", () => {
+    document.getElementById("fin-data").value = obterDataDeHoje(); // Preenche com data de hoje
+    formFinanceiro.classList.remove("escondido");
+  });
+document
+  .getElementById("btn-cancelar-financeiro")
+  .addEventListener("click", () => formFinanceiro.classList.add("escondido"));
+
 document
   .getElementById("btn-cancelar-registro")
   .addEventListener("click", () => {
@@ -531,7 +542,148 @@ formRegistroDesmame.addEventListener("submit", async (e) => {
   }
 });
 
+// ==========================================
+// MÓDULO 4: FINANCEIRO
+// ==========================================
+
+let todasFinancas = [];
+const listaFinanceiro = document.getElementById("lista-financeiro");
+
+// Filtros Financeiros
+const filFinMes = document.getElementById("filtro-fin-mes");
+const filFinTipo = document.getElementById("filtro-fin-tipo");
+const filFinCat = document.getElementById("filtro-fin-categoria");
+
+// Função rápida para transformar número em R$ 0,00
+const formatarMoeda = (valor) => {
+  return Number(valor).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+// 1. Cadastrar Lançamento
+formFinanceiro.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("btn-salvar-fin");
+  btn.innerText = "Salvando...";
+  btn.disabled = true;
+
+  try {
+    await addDoc(collection(db, "financeiro"), {
+      tipo: document.getElementById("fin-tipo").value,
+      data: document.getElementById("fin-data").value,
+      valor: Number(document.getElementById("fin-valor").value),
+      categoria: document.getElementById("fin-categoria").value,
+      descricao: document.getElementById("fin-descricao").value,
+      dataCadastro: new Date(),
+    });
+    formFinanceiro.reset();
+    formFinanceiro.classList.add("escondido");
+  } catch (e) {
+    alert("Erro ao salvar lançamento financeiro.");
+  } finally {
+    btn.innerText = "Salvar Lançamento";
+    btn.disabled = false;
+  }
+});
+
+// 2. Leitura
+function lerFinanceiro() {
+  const q = query(collection(db, "financeiro"), orderBy("data", "desc"));
+  onSnapshot(q, (snapshot) => {
+    todasFinancas = [];
+    snapshot.forEach((docSnap) => {
+      todasFinancas.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    aplicarFiltrosFin(); // Chama o filtro para exibir
+  });
+}
+
+// 3. Aplicar Filtros e Resumo
+function aplicarFiltrosFin() {
+  const tMes = filFinMes.value; // ex: "2026-09"
+  const tTipo = filFinTipo.value;
+  const tCat = filFinCat.value;
+
+  const filtrados = todasFinancas.filter((f) => {
+    // A data salva é "YYYY-MM-DD", então 'startsWith' funciona perfeito para checar o Mês/Ano!
+    const bateMes = tMes === "" ? true : (f.data || "").startsWith(tMes);
+    const bateTipo = tTipo === "" ? true : f.tipo === tTipo;
+    const bateCat = tCat === "" ? true : f.categoria === tCat;
+    return bateMes && bateTipo && bateCat;
+  });
+
+  renderizarFinanceiro(filtrados);
+}
+
+// Adiciona eventos aos filtros
+[filFinMes, filFinTipo, filFinCat].forEach((f) =>
+  f.addEventListener("input", aplicarFiltrosFin),
+);
+document
+  .getElementById("btn-limpar-filtros-fin")
+  .addEventListener("click", () => {
+    filFinMes.value = "";
+    filFinTipo.value = "";
+    filFinCat.value = "";
+    aplicarFiltrosFin();
+  });
+
+// 4. Renderizar e Calcular Dashboard
+function renderizarFinanceiro(lista) {
+  listaFinanceiro.innerHTML = "";
+
+  let totalEntradas = 0;
+  let totalSaidas = 0;
+
+  if (lista.length === 0) {
+    listaFinanceiro.innerHTML =
+      '<p style="text-align:center;">Nenhuma movimentação registrada.</p>';
+  }
+
+  lista.forEach((f) => {
+    // Calcula Totais
+    if (f.tipo === "Entrada") totalEntradas += f.valor;
+    else totalSaidas += f.valor;
+
+    const dataFormat = f.data ? f.data.split("-").reverse().join("/") : "";
+    const classeCor = f.tipo === "Entrada" ? "entrada" : "saida";
+    const sinal = f.tipo === "Entrada" ? "+ " : "- ";
+
+    const div = document.createElement("div");
+    div.classList.add("cartao-financa", classeCor);
+    div.innerHTML = `
+            <div class="financa-info">
+                <h4>${f.descricao}</h4>
+                <span>📅 ${dataFormat}</span>
+                <span>🏷️ ${f.categoria}</span>
+            </div>
+            <div class="financa-valor ${classeCor}">
+                ${sinal}${formatarMoeda(f.valor)}
+            </div>
+        `;
+    listaFinanceiro.appendChild(div);
+  });
+
+  // Atualiza Caixinhas de Resumo
+  document.getElementById("resumo-entradas").innerText =
+    formatarMoeda(totalEntradas);
+  document.getElementById("resumo-saidas").innerText =
+    formatarMoeda(totalSaidas);
+
+  const saldo = totalEntradas - totalSaidas;
+  const divSaldo = document.querySelector(".caixa-resumo.saldo");
+  document.getElementById("resumo-saldo").innerText = formatarMoeda(saldo);
+
+  // Deixa o fundo do Saldo Verde (Lucro) ou Vermelho (Prejuízo)
+  if (saldo > 0) divSaldo.style.backgroundColor = "#27ae60";
+  else if (saldo < 0) divSaldo.style.backgroundColor = "#e74c3c";
+  else divSaldo.style.backgroundColor = "#2c3e50"; // Neutro
+}
+
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
 lerPartos();
+lerFinanceiro();
