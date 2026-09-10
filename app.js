@@ -655,9 +655,9 @@ function renderizarFinanceiro(lista) {
     div.classList.add("cartao-financa", classeCor);
     div.innerHTML = `
             <div class="financa-info">
-                <h4>${f.descricao}</h4>
+                <h4>${f.categoria}</h4>
                 <span>📅 ${dataFormat}</span>
-                <span>🏷️ ${f.categoria}</span>
+                <span>📝 ${f.descricao}</span>
             </div>
             <div class="financa-valor ${classeCor}">
                 ${sinal}${formatarMoeda(f.valor)}
