@@ -531,6 +531,22 @@ window.abrirFormDesmame = function (id, hoje) {
   window.scrollTo(0, 0);
 };
 
+window.excluirCoelho = async function (id) {
+  if (
+    confirm(
+      "Tem certeza que deseja excluir este coelho? Isso não apagará o histórico de partos dele.",
+    )
+  ) {
+    try {
+      await deleteDoc(doc(db, "coelhos", id));
+      alert("Coelho excluído com sucesso!");
+    } catch (erro) {
+      console.error("Erro ao excluir: ", erro);
+      alert("Erro ao excluir o coelho.");
+    }
+  }
+};
+
 const formFinanceiro = document.getElementById("form-financeiro");
 document
   .getElementById("btn-mostrar-form-financeiro")
