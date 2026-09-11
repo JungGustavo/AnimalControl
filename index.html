@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gestão de Coelhos</title>
+    <div class="header-topo">
+      <h1>🐰 Meu Cunicultor</h1>
+      <button id="btn-abrir-relatorios" title="Abrir Relatórios">
+        📊 Relatórios
+      </button>
+    </div>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -409,6 +414,33 @@
         <!-- Lista de lançamentos -->
         <div id="lista-financeiro"></div>
       </section>
+    </div>
+    <!-- MODAL DE RELATÓRIOS -->
+    <div id="modal-relatorios" class="escondido modal-overlay">
+      <div class="modal-content modal-largo">
+        <div class="modal-header">
+          <h3>📊 Relatórios</h3>
+          <button id="btn-fechar-relatorios" class="btn-fechar-modal">✖</button>
+        </div>
+
+        <div class="opcoes-relatorio">
+          <button id="btn-rel-plantel" class="btn-acao">
+            🐇 Inventário do Plantel
+          </button>
+          <button id="btn-rel-reproducao" class="btn-acao">
+            🍼 Desempenho Reprodutivo
+          </button>
+          <button id="btn-rel-financas" class="btn-acao">
+            💰 Balanço Financeiro
+          </button>
+        </div>
+
+        <div id="area-resultado-relatorio">
+          <p style="color: #7f8c8d; text-align: center; margin-top: 30px">
+            Selecione um relatório acima para gerar.
+          </p>
+        </div>
+      </div>
     </div>
     <nav class="menu-inferior">
       <button id="tab-coelhos" class="aba-ativa">

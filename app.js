@@ -59,6 +59,7 @@ document
 
 // --- VARIÁVEIS GLOBAIS ---
 let todosCoelhos = [];
+let todosPartos = [];
 let fotoComprimidaBase64 = "";
 
 // ==========================================
@@ -420,7 +421,7 @@ function lerPartos() {
     snapshot.forEach((docSnap) => {
       const p = docSnap.data();
       const id = docSnap.id;
-
+      todosPartos.push(p);
       let classeExtra = "";
       let tagVisual = "";
       let botaoAcao = "";
@@ -807,6 +808,123 @@ window.excluirFinanca = async function (id) {
     await deleteDoc(doc(db, "financeiro", id));
   }
 };
+
+// ==========================================
+// MÓDULO 5: RELATÓRIOS
+// ==========================================
+
+const modalRelatorios = document.getElementById("modal-relatorios");
+const areaRelatorio = document.getElementById("area-resultado-relatorio");
+
+// Abrir e Fechar Modal
+document
+  .getElementById("btn-abrir-relatorios")
+  .addEventListener("click", () => {
+    modalRelatorios.classList.remove("escondido");
+    areaRelatorio.innerHTML =
+      '<p style="color:#7f8c8d; text-align:center; margin-top:30px;">Selecione um relatório acima.</p>';
+  });
+document
+  .getElementById("btn-fechar-relatorios")
+  .addEventListener("click", () => {
+    modalRelatorios.classList.add("escondido");
+  });
+
+// 1. RELATÓRIO DE PLANTEL
+document.getElementById("btn-rel-plantel").addEventListener("click", () => {
+  const vivos = todosCoelhos.filter((c) => c.status !== "Óbito");
+  const machos = vivos.filter((c) => c.sexo === "Macho").length;
+  const femeas = vivos.filter((c) => c.sexo === "Fêmea").length;
+
+  areaRelatorio.innerHTML = `
+        <h4 style="margin-bottom:15px; color:#2c3e50;">🐇 Inventário Atual (Ativos)</h4>
+        <div class="linha-relatorio"><span>Total de Coelhos Vivos:</span> <strong>${vivos.length}</strong></div>
+        <div class="linha-relatorio"><span>Fêmeas (Matrizes):</span> <strong style="color:#e84393;">${femeas}</strong></div>
+        <div class="linha-relatorio"><span>Machos (Reprodutores):</span> <strong style="color:#0984e3;">${machos}</strong></div>
+    `;
+});
+
+// 2. RELATÓRIO DE REPRODUÇÃO
+document.getElementById("btn-rel-reproducao").addEventListener("click", () => {
+  const partosConcluidos = todosPartos.filter(
+    (p) => p.status === "Desmame Concluído",
+  );
+
+  if (partosConcluidos.length === 0) {
+    areaRelatorio.innerHTML =
+      "<p>Nenhum ciclo de reprodução foi totalmente concluído (desmamado) ainda.</p>";
+    return;
+  }
+
+  let totalVivos = 0,
+    totalMortos = 0,
+    totalDesmamados = 0;
+
+  partosConcluidos.forEach((p) => {
+    totalVivos += p.vivos || 0;
+    totalMortos += p.mortos || 0;
+    totalDesmamados += p.desmamados || 0;
+  });
+
+  const taxaSobrevivencia =
+    totalVivos > 0 ? ((totalDesmamados / totalVivos) * 100).toFixed(1) : 0;
+  const mediaPorParto = (totalDesmamados / partosConcluidos.length).toFixed(1);
+
+  areaRelatorio.innerHTML = `
+        <h4 style="margin-bottom:15px; color:#2c3e50;">🍼 Desempenho (Partos Finalizados)</h4>
+        <div class="linha-relatorio"><span>Ciclos Concluídos:</span> <strong>${partosConcluidos.length}</strong></div>
+        <div class="linha-relatorio"><span>Total Nascidos Vivos:</span> <strong>${totalVivos}</strong></div>
+        <div class="linha-relatorio"><span>Total Nascidos Mortos:</span> <strong>${totalMortos}</strong></div>
+        <div class="linha-relatorio"><span>Total Desmamados:</span> <strong style="color:#27ae60;">${totalDesmamados}</strong></div>
+        <div class="linha-relatorio" style="background:#fff3cd; padding:10px;">
+            <span>Taxa de Sobrevivência (Nascimento ao Desmame):</span> 
+            <strong>${taxaSobrevivencia}%</strong>
+        </div>
+        <div class="linha-relatorio" style="background:#e8f4f8; padding:10px;">
+            <span>Média de filhotes desmamados por parto:</span> 
+            <strong>${mediaPorParto}</strong>
+        </div>
+    `;
+});
+
+// 3. RELATÓRIO FINANCEIRO (Agrupado por Categoria)
+document.getElementById("btn-rel-financas").addEventListener("click", () => {
+  let entradas = 0,
+    saidas = 0;
+  let gastosPorCategoria = {};
+
+  todasFinancas.forEach((f) => {
+    if (f.tipo === "Entrada") {
+      entradas += f.valor;
+    } else {
+      saidas += f.valor;
+      // Agrupa os gastos
+      if (!gastosPorCategoria[f.categoria]) gastosPorCategoria[f.categoria] = 0;
+      gastosPorCategoria[f.categoria] += f.valor;
+    }
+  });
+
+  const saldo = entradas - saidas;
+  const corSaldo = saldo >= 0 ? "#27ae60" : "#e74c3c";
+
+  // Monta a lista de categorias gastas
+  let htmlCategorias =
+    '<h5 style="margin-top:15px; margin-bottom:5px; color:#555;">Despesas por Categoria:</h5>';
+  for (let cat in gastosPorCategoria) {
+    htmlCategorias += `<div class="linha-relatorio"><span>${cat}:</span> <strong style="color:#e74c3c;">R$ ${gastosPorCategoria[cat].toFixed(2).replace(".", ",")}</strong></div>`;
+  }
+
+  areaRelatorio.innerHTML = `
+        <h4 style="margin-bottom:15px; color:#2c3e50;">💰 Balanço Geral</h4>
+        <div class="linha-relatorio"><span>Total de Receitas:</span> <strong style="color:#27ae60;">R$ ${entradas.toFixed(2).replace(".", ",")}</strong></div>
+        <div class="linha-relatorio"><span>Total de Despesas:</span> <strong style="color:#e74c3c;">R$ ${saidas.toFixed(2).replace(".", ",")}</strong></div>
+        <div class="linha-relatorio" style="background:#ecf0f1; padding:10px; font-size:16px;">
+            <span>Saldo Atual:</span> <strong style="color:${corSaldo};">R$ ${saldo.toFixed(2).replace(".", ",")}</strong>
+        </div>
+        ${saidas > 0 ? htmlCategorias : ""}
+    `;
+});
+
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
