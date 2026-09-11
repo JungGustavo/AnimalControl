@@ -9,6 +9,9 @@ import {
   orderBy,
   doc,
   updateDoc,
+  deleteDoc,
+  where,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -137,6 +140,8 @@ const filtroRaca = document.getElementById("filtro-raca");
 const filtroNasc = document.getElementById("filtro-nascimento");
 const filtroSexo = document.getElementById("filtro-sexo");
 const listaCoelhos = document.getElementById("lista-coelhos");
+const filtroStatus = document.getElementById("filtro-status");
+if (filtroStatus) filtroStatus.addEventListener("change", aplicarFiltros);
 
 function lerCoelhos() {
   const q = query(collection(db, "coelhos"), orderBy("dataCadastro", "desc"));
@@ -151,45 +156,95 @@ function lerCoelhos() {
 }
 
 function aplicarFiltros() {
-  const tNome = filtroNome.value.toLowerCase(),
-    tRaca = filtroRaca.value.toLowerCase();
-  const tNasc = filtroNasc.value,
-    tSexo = filtroSexo.value;
+  // Pega os valores digitados nos filtros
+  const tNome = filtroNome.value.toLowerCase();
+  const tRaca = filtroRaca.value.toLowerCase();
+  const tNasc = filtroNasc.value;
+  const tSexo = filtroSexo.value;
+
+  // Pega o filtro de Status (Vivo/Óbito/Todos). Se não existir ainda na tela, o padrão é "Vivo"
+  const filtroStatus = document.getElementById("filtro-status");
+  const tStatus = filtroStatus ? filtroStatus.value : "Vivo";
+
+  // Filtra a lista de coelhos
   const filtrados = todosCoelhos.filter((c) => {
+    // Se o coelho for antigo e não tiver status salvo no banco, consideramos "Vivo"
+    const cStatus = c.status || "Vivo";
+
     const bateNome = (c.nome || "").toLowerCase().includes(tNome);
     const bateRaca = (c.raca || "").toLowerCase().includes(tRaca);
     const bateNasc = tNasc === "" ? true : c.nascimento === tNasc;
     const bateSexo = tSexo === "" ? true : c.sexo === tSexo;
-    return bateNome && bateRaca && bateNasc && bateSexo;
+
+    // Filtro de status (Se o filtro estiver vazio "", mostra todos)
+    const bateStatus = tStatus === "" ? true : cStatus === tStatus;
+
+    return bateNome && bateRaca && bateNasc && bateSexo && bateStatus;
   });
 
+  // Limpa a tela antes de desenhar os novos resultados
   listaCoelhos.innerHTML = "";
+
+  // Se não achar ninguém, mostra mensagem
   if (filtrados.length === 0) {
-    listaCoelhos.innerHTML = "<p>Nenhum coelho.</p>";
+    listaCoelhos.innerHTML =
+      '<p style="text-align:center; color:#7f8c8d; margin-top:20px;">Nenhum coelho encontrado.</p>';
     return;
   }
+
+  // Desenha cada coelho na tela
   filtrados.forEach((c) => {
+    const isObito = c.status === "Óbito";
     let dataNasc = c.nascimento
       ? c.nascimento.split("-").reverse().join("/")
       : "-";
+
+    // Se o coelho estiver morto, monta a tag de data de óbito
+    let tagsObito = isObito
+      ? `<span class="tag-obito">✝️ Falecido em ${c.dataObito ? c.dataObito.split("-").reverse().join("/") : "Data desconhecida"}</span><br>`
+      : "";
+
+    // Se o coelho estiver vivo, mostra o botão "Óbito". Se já estiver morto, esconde esse botão.
+    let btnObito = !isObito
+      ? `<button class="btn-obito" onclick="registrarObito('${c.id}')">✝️ Marcar Óbito</button>`
+      : "";
+
     const div = document.createElement("div");
     div.classList.add("cartao-coelho");
+
+    // Adiciona a classe cinza se for óbito
+    if (isObito) {
+      div.classList.add("coelho-obito");
+    }
+
+    // Monta o HTML do cartão
     div.innerHTML = `
-            <img src="${c.foto || ""}" class="foto-lista" onerror="this.style.display='none'">
-            <div class="info-coelho">
-                <strong>#${c.numero || "S/N"} - ${c.nome || "S/N"}</strong>
+            <img src="${c.foto || ""}" class="foto-lista" onerror="this.style.display='none'" alt="Foto de ${c.nome}">
+            <div class="info-coelho" style="width:100%;">
+                <strong>#${c.numero || "S/N"} - ${c.nome || "S/N"}</strong><br>
+                ${tagsObito}
                 <span><strong>Raça:</strong> ${c.raca || "-"}</span>
                 <span><strong>Sexo:</strong> ${c.sexo || "-"}</span>
                 <span><strong>Nascimento:</strong> ${dataNasc}</span>
                 ${c.observacoes ? `<p class="obs">Obs: ${c.observacoes}</p>` : ""}
+                
+                <!-- Área dos Botões (Óbito e Excluir) -->
+                <div class="botoes-acao-lista">
+                    ${btnObito}
+                    <button class="btn-excluir" onclick="excluirCoelho('${c.id}')" style="margin-top:0;">🗑️ Excluir</button>
+                </div>
             </div>
         `;
+
+    // Adiciona o cartão pronto na lista
     listaCoelhos.appendChild(div);
   });
 }
+
 [filtroNome, filtroRaca, filtroNasc, filtroSexo].forEach((f) =>
   f.addEventListener("input", aplicarFiltros),
 );
+
 document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
   filtroNome.value = "";
   filtroRaca.value = "";
@@ -208,14 +263,16 @@ function atualizarSelectsCobertura() {
   selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
 
   todosCoelhos.forEach((c) => {
-    const option = document.createElement("option");
-    option.value = `${c.nome} | #${c.numero || "S/N"}`;
-    option.innerText = `${c.nome} | #${c.numero || "S/N"}`;
-    if (c.sexo === "Fêmea") selFemea.appendChild(option);
-    if (c.sexo === "Macho") selMacho.appendChild(option);
+    // Ignora coelhos em óbito na hora de acasalar!
+    if (c.status !== "Óbito") {
+      const option = document.createElement("option");
+      option.value = `${c.nome} | #${c.numero || "S/N"}`;
+      option.innerText = `${c.nome} | #${c.numero || "S/N"}`;
+      if (c.sexo === "Fêmea") selFemea.appendChild(option);
+      if (c.sexo === "Macho") selMacho.appendChild(option);
+    }
   });
 }
-
 // 1. Apenas salva a cobertura (sem gerar o parto ainda)
 formCobertura.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -272,6 +329,7 @@ function lerCoberturas() {
       const div = document.createElement("div");
       div.classList.add("cartao-cobertura");
       div.innerHTML = `
+                <button class="btn-mini-excluir" onclick="excluirCobertura('${idCob}')" title="Excluir Cobertura">🗑️</button>
                 <strong>❤️ Acasalamento: ${dataCob}</strong>
                 <span style="margin-top:8px;"><strong>Mãe:</strong> ${cob.femea}</span>
                 <span><strong>Pai:</strong> ${cob.macho}</span>
@@ -440,7 +498,9 @@ function lerPartos() {
       div.classList.add("cartao-parto");
       if (classeExtra) div.classList.add(classeExtra);
 
+      // Note a inclusão do botão excluir passando o p.coberturaId
       div.innerHTML = `
+                <button class="btn-mini-excluir" onclick="excluirParto('${id}', '${p.coberturaId}')" title="Excluir Parto">🗑️</button>
                 ${htmlTimeline}
                 <div style="margin-top: 10px;">
                     ${tagVisual}
@@ -682,6 +742,60 @@ function renderizarFinanceiro(lista) {
   else divSaldo.style.backgroundColor = "#2c3e50"; // Neutro
 }
 
+window.registrarObito = async function (id) {
+  if (
+    confirm(
+      "Deseja marcar este coelho como Óbito? Ele sairá da lista de vivos, mas seu histórico será mantido.",
+    )
+  ) {
+    const dataHoje = obterDataDeHoje(); // Usamos a mesma função de data que criamos antes
+    await updateDoc(doc(db, "coelhos", id), {
+      status: "Óbito",
+      dataObito: dataHoje,
+    });
+  }
+};
+
+window.excluirCobertura = async function (id) {
+  if (
+    confirm(
+      "Excluir esta cobertura? Se houver um parto agendado para ela, ele também será excluído.",
+    )
+  ) {
+    // 1. Busca se tem algum parto atrelado a essa cobertura
+    const qPartos = query(
+      collection(db, "partos"),
+      where("coberturaId", "==", id),
+    );
+    const partosSnaps = await getDocs(qPartos);
+
+    // 2. Exclui os partos atrelados (Exclusão Encadeada)
+    partosSnaps.forEach(async (docParto) => {
+      await deleteDoc(doc(db, "partos", docParto.id));
+    });
+
+    // 3. Exclui a cobertura em si
+    await deleteDoc(doc(db, "coberturas", id));
+  }
+};
+
+window.excluirParto = async function (idParto, idCobertura) {
+  if (
+    confirm(
+      "Excluir este parto? A cobertura dele voltará para o status de 'Pendente'.",
+    )
+  ) {
+    // 1. Exclui o Parto
+    await deleteDoc(doc(db, "partos", idParto));
+
+    // 2. Restaura a cobertura para poder ser confirmada de novo
+    if (idCobertura) {
+      await updateDoc(doc(db, "coberturas", idCobertura), {
+        partoConfirmado: false,
+      });
+    }
+  }
+};
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
