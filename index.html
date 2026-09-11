@@ -10,14 +10,6 @@
     <div class="container">
       <h1>🐰 Meu Cunicultor</h1>
 
-      <!-- Menu de Navegação Rolável para Celular -->
-      <nav class="menu-superior">
-        <button id="tab-coelhos" class="aba-ativa">Coelhos</button>
-        <button id="tab-cobertura">Coberturas</button>
-        <button id="tab-partos">Partos</button>
-        <button id="tab-financeiro">Financeiro</button>
-      </nav>
-
       <!-- SESSÃO 1: COELHOS -->
       <section id="sec-coelhos">
         <div class="acoes-topo">
@@ -101,6 +93,13 @@
                 <option value="Fêmea">Fêmea</option>
               </select>
             </div>
+          </div>
+          <div class="form-group">
+            <select id="filtro-status">
+              <option value="Vivo">Apenas Vivos</option>
+              <option value="Óbito">Apenas Óbitos</option>
+              <option value="">Todos</option>
+            </select>
           </div>
           <button id="btn-limpar-filtros" class="btn-secundario">
             Limpar Filtros
@@ -411,6 +410,24 @@
         <div id="lista-financeiro"></div>
       </section>
     </div>
+    <nav class="menu-inferior">
+      <button id="tab-coelhos" class="aba-ativa">
+        <span class="icone">🐰</span>
+        <span class="texto">Coelhos</span>
+      </button>
+      <button id="tab-cobertura">
+        <span class="icone">❤️</span>
+        <span class="texto">Coberturas</span>
+      </button>
+      <button id="tab-partos">
+        <span class="icone">🍼</span>
+        <span class="texto">Partos</span>
+      </button>
+      <button id="tab-financeiro">
+        <span class="icone">💰</span>
+        <span class="texto">Financeiro</span>
+      </button>
+    </nav>
     <!-- MODAL DE CONFIRMAÇÃO DE PARTO -->
     <div id="modal-confirmacao" class="escondido modal-overlay">
       <div class="modal-content">
