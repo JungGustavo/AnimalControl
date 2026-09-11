@@ -719,8 +719,9 @@ function renderizarFinanceiro(lista) {
                 <span>📅 ${dataFormat}</span>
                 <span>📝 ${f.descricao}</span>
             </div>
-            <div class="financa-valor ${classeCor}">
+            <div class="financa-valor ${classeCor}" style="display:flex; align-items:center; justify-content:flex-end;">
                 ${sinal}${formatarMoeda(f.valor)}
+                <button class="btn-excluir-financa" title="Excluir" onclick="excluirFinanca('${f.id}')">🗑️</button>
             </div>
         `;
     listaFinanceiro.appendChild(div);
@@ -794,6 +795,16 @@ window.excluirParto = async function (idParto, idCobertura) {
         partoConfirmado: false,
       });
     }
+  }
+};
+
+window.excluirFinanca = async function (id) {
+  if (
+    confirm(
+      "Excluir este lançamento financeiro? O valor será recalculado automaticamente.",
+    )
+  ) {
+    await deleteDoc(doc(db, "financeiro", id));
   }
 };
 // Inicia as leituras
