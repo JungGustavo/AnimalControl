@@ -12,6 +12,8 @@ import {
   deleteDoc,
   where,
   getDocs,
+  getDoc,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -863,6 +865,84 @@ document
     if (menuInferior) menuInferior.classList.remove('escondido');
   });
 
+const modalNotas = document.getElementById('modal-notas');
+const campoNotas = document.getElementById('texto-bloco-notas');
+const btnFecharNotas = document.getElementById('btn-fechar-notas');
+const btnSalvarNotas = document.getElementById('btn-salvar-notas');
+
+// Referência fixa do documento de notas no Firestore
+const docNotasRef = doc(db, "anotacoes", "bloco_geral");
+
+// 1. ABRIR NOTAS E BUSCAR DO FIRESTORE
+document.getElementById("btn-abrir-notas").addEventListener("click", async () => {
+    modalNotas.classList.remove("escondido");
+    if (menuInferior) menuInferior.classList.add("escondido");
+
+    campoNotas.value = "";
+    campoNotas.placeholder = "Carregando anotações...";
+    campoNotas.disabled = true;
+
+    try {
+        const docNotasRef = doc(db, "anotacoes", "bloco_geral");
+        
+        // Timeout de segurança caso a rede demore
+        const buscaPromise = getDoc(docNotasRef);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Timeout")), 5000)
+        );
+
+        const docSnap = await Promise.race([buscaPromise, timeoutPromise]);
+
+        if (docSnap.exists()) {
+            campoNotas.value = docSnap.data().texto || "";
+        } else {
+            campoNotas.value = "";
+        }
+    } catch (error) {
+        console.error("Erro ao carregar notas:", error);
+        campoNotas.value = "";
+    } finally {
+        campoNotas.placeholder = "Escreva suas anotações aqui...";
+        campoNotas.disabled = false;
+        campoNotas.focus();
+    }
+});
+
+// 2. FECHAR NOTAS
+function fecharModalNotas() {
+    modalNotas.classList.add("escondido");
+    if (menuInferior) menuInferior.classList.remove("escondido");
+}
+
+if (btnFecharNotas) btnFecharNotas.addEventListener("click", fecharModalNotas);
+
+// 3. SALVAR NOTAS NO FIRESTORE
+if (btnSalvarNotas) {
+    btnSalvarNotas.addEventListener("click", async () => {
+        const texto = campoNotas.value;
+        
+        btnSalvarNotas.disabled = true;
+        btnSalvarNotas.innerText = "⏳ Salvando...";
+
+        try {
+            const docNotasRef = doc(db, "anotacoes", "bloco_geral");
+            await setDoc(docNotasRef, {
+                texto: texto,
+                ultimaAtualizacao: new Date()
+            });
+
+            alert("📝 Anotações salvas com sucesso!");
+            fecharModalNotas();
+        } catch (error) {
+            console.error("Erro ao salvar nota:", error);
+            alert("❌ Erro ao salvar as anotações.");
+        } finally {
+            btnSalvarNotas.disabled = false;
+            btnSalvarNotas.innerText = "💾 Salvar no Firebase";
+        }
+    });
+} 
+
 // 1. RELATÓRIO DE PLANTEL
 document.getElementById("btn-rel-plantel").addEventListener("click", () => {
   const vivos = todosCoelhos.filter((c) => c.status !== "Óbito");
@@ -1071,23 +1151,6 @@ btnToggleFiltrosFinanceiro.addEventListener('click', () => {
 });
 
 
-// 1. QUANDO ABRIR OS RELATÓRIOS:
-function abrirModalRelatorios() {
-    const modal = document.getElementById('modal-relatorios');
-    modal.classList.remove('escondido');
-    
-    // Esconde o menu inferior
-    if (menuInferior) menuInferior.classList.add('escondido');
-}
-
-// 2. QUANDO FECHAR OS RELATÓRIOS:
-function fecharModalRelatorios() {
-    const modal = document.getElementById('modal-relatorios');
-    modal.classList.add('escondido');
-    
-    // Exibe novamente o menu inferior
-    if (menuInferior) menuInferior.classList.remove('escondido');
-}
 
 // Inicia as leituras
 lerCoelhos();

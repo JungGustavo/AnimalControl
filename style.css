@@ -883,6 +883,10 @@ body {
     white-space: nowrap; /* Mantém numa linha só, sem colocar os pontinhos (...) */
 }
 
+.div-menu-superior{
+  display: flex;
+}
+
 #btn-abrir-relatorios {
     background: transparent; /* Remove o fundo escuro */
     border: none;
@@ -900,6 +904,23 @@ body {
   justify-content: right !important;
   }
 
+#btn-abrir-notas{
+  background: transparent; /* Remove o fundo escuro */
+    border: none;
+    box-shadow: none; /* Remove a sombra */
+    padding: 10px; /* Cria uma área de clique invisível e confortável para o dedo */
+    font-size: 26px; /* Deixa o emoji 📊 bem maior */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+    -webkit-tap-highlight-color: transparent;
+    position: relative !important; 
+  justify-content: right !important;
+}
+
 
 /* Oculta o texto permanentemente para manter o visual limpo */
 .texto-oculto-mobile {
@@ -914,7 +935,11 @@ body {
     }
     
     #btn-abrir-relatorios {
-        padding: 10px; /* Deixa o botão quadradinho */
+        padding: 2px; /* Deixa o botão quadradinho */
+        font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
+    }
+    #btn-abrir-notas{
+        padding: 2px; /* Deixa o botão quadradinho */
         font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
     }
 }
