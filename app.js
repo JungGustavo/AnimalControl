@@ -258,21 +258,33 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 // MÓDULO 2: COBERTURA E AUTOMAÇÃO DE PARTOS
 // ==========================================
 function atualizarSelectsCobertura() {
-  const selFemea = document.getElementById("cobertura-femea");
-  const selMacho = document.getElementById("cobertura-macho");
-  selFemea.innerHTML = '<option value="">Selecione a fêmea...</option>';
-  selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
+    const selFemea = document.getElementById('cobertura-femea');
+    const selMacho = document.getElementById('cobertura-macho');
+    const selRelCoelho = document.getElementById('select-rel-coelho'); // Novo select do relatório
+    
+    selFemea.innerHTML = '<option value="">Selecione a fêmea...</option>';
+    selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
+    if(selRelCoelho) selRelCoelho.innerHTML = '<option value="">Selecione um coelho...</option>';
+    
+    todosCoelhos.forEach(c => {
+        const nomeFormatado = `${c.nome} | #${c.numero || 'S/N'}`;
+        
+        // Preenche Machos e Fêmeas (ignorando óbitos para acasalamento)
+        if(c.status !== "Óbito") {
+            const optionF = document.createElement('option'); optionF.value = nomeFormatado; optionF.innerText = nomeFormatado;
+            const optionM = document.createElement('option'); optionM.value = nomeFormatado; optionM.innerText = nomeFormatado;
+            if(c.sexo === 'Fêmea') selFemea.appendChild(optionF);
+            if(c.sexo === 'Macho') selMacho.appendChild(optionM);
+        }
 
-  todosCoelhos.forEach((c) => {
-    // Ignora coelhos em óbito na hora de acasalar!
-    if (c.status !== "Óbito") {
-      const option = document.createElement("option");
-      option.value = `${c.nome} | #${c.numero || "S/N"}`;
-      option.innerText = `${c.nome} | #${c.numero || "S/N"}`;
-      if (c.sexo === "Fêmea") selFemea.appendChild(option);
-      if (c.sexo === "Macho") selMacho.appendChild(option);
-    }
-  });
+        // Preenche o Relatório com TODOS os coelhos (incluindo óbitos, pois eles têm histórico)
+        if(selRelCoelho) {
+            const optionRel = document.createElement('option');
+            optionRel.value = c.id; // Salvamos o ID para buscar os dados completos
+            optionRel.innerText = nomeFormatado + (c.status === 'Óbito' ? ' (Óbito)' : '');
+            selRelCoelho.appendChild(optionRel);
+        }
+    });
 }
 // 1. Apenas salva a cobertura (sem gerar o parto ainda)
 formCobertura.addEventListener("submit", async (e) => {
@@ -324,18 +336,20 @@ function lerCoberturas() {
         // Passa os dados para a função do modal
         areaAcao = `<button class="btn-acao btn-pequeno" onclick="prepararConfirmacaoParto('${idCob}', '${cob.femea}', '${cob.macho}', '${cob.dataCobertura}')">Confirmar Parto</button>`;
       } else {
-        areaAcao = `<span class="tag-notificacao tag-sucesso" style="margin-top:10px;">✅ Prenhez Confirmada</span>`;
+        areaAcao = `<span class="tag-notificacao tag-sucesso" style="margin-top:10px;">✅ Gravidez confirmada</span>`;
       }
 
       const div = document.createElement("div");
       div.classList.add("cartao-cobertura");
       div.innerHTML = `
-                <button class="btn-mini-excluir" onclick="excluirCobertura('${idCob}')" title="Excluir Cobertura">🗑️</button>
-                <strong>❤️ Acasalamento: ${dataCob}</strong>
-                <span style="margin-top:8px;"><strong>Mãe:</strong> ${cob.femea}</span>
-                <span><strong>Pai:</strong> ${cob.macho}</span>
-                <div>${areaAcao}</div>
-            `;
+    <button class="btn-mini-excluir" onclick="excluirCobertura('${idCob}')" title="Excluir">🗑️</button>
+    <div style="padding-right: 25px;"> <!-- Espaço para o ícone da lixeira não tapar o texto -->
+        <strong style="display: block; margin-bottom: 8px;">❤️ Acasalamento: ${dataCob}</strong>
+        <span style="display: block; margin-bottom: 4px;"><strong>Mãe:</strong> ${cob.femea}</span>
+        <span style="display: block; margin-bottom: 12px;"><strong>Pai:</strong> ${cob.macho}</span>
+    </div>
+    ${areaAcao}
+`;
       listaCoberturas.appendChild(div);
     });
   });
@@ -939,6 +953,118 @@ document.getElementById("btn-rel-financas").addEventListener("click", () => {
         </div>
         ${saidas > 0 ? htmlCategorias : ""}
     `;
+});
+
+document.getElementById('btn-rel-individual').addEventListener('click', () => {
+    const idCoelho = document.getElementById('select-rel-coelho').value;
+    
+    if(!idCoelho) {
+        alert("Por favor, selecione um coelho na lista!");
+        return;
+    }
+
+    // Acha os dados completos do coelho
+    const coelho = todosCoelhos.find(c => c.id === idCoelho);
+    const labelCoelho = `${coelho.nome} | #${coelho.numero || 'S/N'}`;
+    const dataNascStr = coelho.nascimento ? coelho.nascimento.split('-').reverse().join('/') : '-';
+    const corStatus = coelho.status === "Óbito" ? "#e74c3c" : "#27ae60";
+
+    // Busca todos os partos em que este coelho foi o Pai ou a Mãe
+    const historicoPartos = todosPartos.filter(p => p.femea === labelCoelho || p.macho === labelCoelho);
+    
+    // Calcula totais reprodutivos
+    let totalVivos = 0, totalMortos = 0, totalDesmamados = 0;
+    historicoPartos.forEach(p => {
+        if(p.status === "Desmame Concluído") {
+            totalVivos += (p.vivos || 0);
+            totalMortos += (p.mortos || 0);
+            totalDesmamados += (p.desmamados || 0);
+        }
+    });
+
+    // Monta a Linha do Tempo Visual do Histórico
+    let htmlCiclos = '';
+    if(historicoPartos.length > 0) {
+        historicoPartos.forEach(p => {
+            const parceiro = p.femea === labelCoelho ? p.macho : p.femea;
+            let resumoCiclo = "";
+            let corCiclo = "#ccc";
+
+            if (p.status === "Desmame Concluído") {
+                corCiclo = "#8e44ad";
+                resumoCiclo = `✅ Vivos: <strong>${p.vivos}</strong> | Desmamados: <strong style="color:#27ae60;">${p.desmamados}</strong> (Média peso: ${p.pesoMedio || '-'}kg)`;
+            } else if (p.status === "Aguardando Nascimento") {
+                corCiclo = "#f39c12";
+                resumoCiclo = `⏳ Previsão de Parto: ${p.dataPrevistaParto.split('-').reverse().join('/')}`;
+            } else {
+                corCiclo = "#3498db";
+                resumoCiclo = `🍼 Amamentando | Nascidos: ${p.vivos}`;
+            }
+
+            htmlCiclos += `
+                <div style="background:#fff; border-left:4px solid ${corCiclo}; padding:10px; margin-bottom:8px; border-radius:4px; font-size:13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <strong>Parceiro(a):</strong> ${parceiro} <br>
+                    <strong>Status:</strong> ${p.status} <br>
+                    <span style="display:inline-block; margin-top:5px;">${resumoCiclo}</span>
+                </div>
+            `;
+        });
+    } else {
+        htmlCiclos = '<p style="color:#777; font-size:13px;">Nenhum ciclo reprodutivo registrado para este animal.</p>';
+    }
+
+    // Desenha o Relatório Completo na Tela
+    areaRelatorio.innerHTML = `
+        <h4 style="margin-bottom:10px; color:#8e44ad;">🔍 Dossiê: ${coelho.nome}</h4>
+        
+        <div style="background:#ecf0f1; padding:10px; border-radius:8px; margin-bottom:15px;">
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>ID:</span> <strong>#${coelho.numero || 'S/N'}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Raça:</span> <strong>${coelho.raca || '-'}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Sexo:</span> <strong>${coelho.sexo}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Nascimento:</span> <strong>${dataNascStr}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Status:</span> <strong style="color:${corStatus};">${coelho.status || 'Vivo'}</strong></div>
+        </div>
+
+        <h5 style="margin-bottom:10px; color:#2c3e50;">📊 Desempenho Reprodutivo</h5>
+        <div class="linha-relatorio"><span>Ciclos Participados:</span> <strong>${historicoPartos.length}</strong></div>
+        <div class="linha-relatorio"><span>Total Vivos (Filhos):</span> <strong>${totalVivos}</strong></div>
+        <div class="linha-relatorio"><span>Total Desmamados:</span> <strong style="color:#27ae60;">${totalDesmamados}</strong></div>
+
+        <h5 style="margin-top:20px; margin-bottom:10px; color:#2c3e50;">📅 Histórico de Ciclos</h5>
+        ${htmlCiclos}
+    `;
+});
+
+//filtro coelhos
+const btnToggleFiltros = document.getElementById('btn-toggle-filtros');
+const areaFiltros = document.getElementById('area-filtros-coelhos');
+
+btnToggleFiltros.addEventListener('click', () => {
+    if (areaFiltros.classList.contains('escondido')) {
+        areaFiltros.classList.remove('escondido');
+        btnToggleFiltros.innerHTML = '⬆️ Ocultar Filtros';
+        btnToggleFiltros.style.backgroundColor = '#f1f2f6'; // Fica amarelado pra destacar que o filtro está ativo
+    } else {
+        areaFiltros.classList.add('escondido');
+        btnToggleFiltros.innerHTML = '🔍 Mostrar Filtros';
+        btnToggleFiltros.style.backgroundColor = '#f1f2f6'; // Volta a cor normal
+    }
+});
+
+//filtro financeiro
+const btnToggleFiltrosFinanceiro = document.getElementById('btn-toggle-filtros-financeiro');
+const areaFiltrosFinanceiro = document.getElementById('area-filtros-financeiro');
+
+btnToggleFiltrosFinanceiro.addEventListener('click', () => {
+    if (areaFiltrosFinanceiro.classList.contains('escondido')) {
+        areaFiltrosFinanceiro.classList.remove('escondido');
+        btnToggleFiltrosFinanceiro.innerHTML = '⬆️ Ocultar Filtros';
+        btnToggleFiltrosFinanceiro.style.backgroundColor = '#f1f2f6'; // Fica amarelado pra destacar que o filtro está ativo
+    } else {
+        areaFiltrosFinanceiro.classList.add('escondido');
+        btnToggleFiltrosFinanceiro.innerHTML = '🔍 Mostrar Filtros';
+        btnToggleFiltrosFinanceiro.style.backgroundColor = '#f1f2f6'; // Volta a cor normal
+    }
 });
 
 // Inicia as leituras

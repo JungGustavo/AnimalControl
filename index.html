@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <div class="header-topo">
-      <h1>🐰 Meu Cunicultor</h1>
-      <button id="btn-abrir-relatorios" title="Abrir Relatórios">
-        📊 Relatórios
-      </button>
-    </div>
+            <h1>🐰 Meus coelhos</h1>
+            <button id="btn-abrir-relatorios" class="btn-relatorios" title="Abrir Relatórios">
+                📊 <span class="texto-oculto-mobile">Relatórios</span>
+            </button>
+        </div>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -22,7 +22,13 @@
           </button>
         </div>
 
-        <form id="form-coelho" class="escondido">
+        <form id="form-coelho" class="escondido" style="
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #27ae60;
+          ">
           <div class="form-group">
             <label>Número/ID</label><input type="text" id="numero" required />
           </div>
@@ -69,59 +75,49 @@
           </div>
         </form>
 
-        <!-- Filtros omitidos aqui no HTML para não ficar gigante, mas eles estão presentes (mesmo código de antes) -->
-        <div class="filtros-container">
-          <div class="filtros-grid">
-            <div class="form-group">
-              <input
-                type="text"
-                id="filtro-nome"
-                placeholder="🔍 Buscar nome..."
-              />
-            </div>
-            <div class="form-group">
-              <input
-                type="text"
-                id="filtro-raca"
-                placeholder="🔍 Buscar raça..."
-              />
-            </div>
-            <div class="form-group">
-              <input type="date" id="filtro-nascimento" />
-            </div>
-            <div class="form-group">
-              <select id="filtro-sexo">
-                <option value="">Todos os sexos</option>
-                <option value="Macho">Macho</option>
-                <option value="Fêmea">Fêmea</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <select id="filtro-status">
-              <option value="Vivo">Apenas Vivos</option>
-              <option value="Óbito">Apenas Óbitos</option>
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <button id="btn-limpar-filtros" class="btn-secundario">
-            Limpar Filtros
-          </button>
-        </div>
+        <button id="btn-toggle-filtros" class="btn-toggle-filtros">🔍 Mostrar Filtros</button>
 
+            <!-- ÁREA DE FILTROS (Agrupada e Oculta por padrão) -->
+            <div id="area-filtros-coelhos" class="escondido">
+                <div class="filtros-grid">
+                    <div class="form-group"><input type="text" id="filtro-nome" placeholder="Buscar por nome/número..."></div>
+                    <div class="form-group"><input type="text" id="filtro-raca" placeholder="Buscar por raça..."></div>
+                    <div class="form-group"><input type="date" id="filtro-nascimento"></div>
+                    <div class="form-group">
+                        <select id="filtro-sexo">
+                            <option value="">Todos os sexos</option>
+                            <option value="Macho">Macho</option>
+                            <option value="Fêmea">Fêmea</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="filtro-status">
+                            <option value="Vivo">Apenas Vivos</option>
+                            <option value="Óbito">Apenas Óbitos</option>
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="btn-limpar-filtros" class="btn-secundario" style="margin-bottom: 15px;">Limpar Filtros</button>
+            </div>
         <div id="lista-coelhos"></div>
       </section>
 
-      <!-- SESSÃO 2: COBERTURA (NOVA) -->
+      <!-- SESSÃO 2: COBERTURA -->
       <section id="sec-cobertura" class="escondido">
         <div class="acoes-topo">
           <h2>Histórico de Coberturas</h2>
-          <button id="btn-mostrar-form-cobertura" class="btn-acao">
-            + Cobertura
+          <button id="btn-mostrar-form-cobertura" class="btn-acao btn-round">
+            +
           </button>
         </div>
-
-        <form id="form-cobertura" class="escondido">
+        <form id="form-cobertura" class="escondido" style="
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #27ae60;
+          ">
           <div class="form-group">
             <label>Selecione a Fêmea</label>
             <select id="cobertura-femea" required></select>
@@ -147,11 +143,10 @@
             </button>
           </div>
         </form>
-
         <div id="lista-coberturas"></div>
       </section>
 
-      <!-- SESSÃO 3: PARTOS (Será alterada no futuro) -->
+      <!-- SESSÃO 3: PARTOS -->
       <section id="sec-partos" class="escondido">
         <div class="acoes-topo">
           <h2>Controle de Partos</h2>
@@ -214,7 +209,6 @@
             <label>Quantidade de Filhotes</label>
             <input type="number" id="qtd-desmamados" min="0" required />
           </div>
-          <!-- NOVO CAMPO: PESO MÉDIO -->
           <div class="form-group">
             <label>Peso Médio (kg ou gramas)</label>
             <input
@@ -269,10 +263,10 @@
           <h2>Gestão Financeira</h2>
           <button
             id="btn-mostrar-form-financeiro"
-            class="btn-acao"
+            class="btn-acao btn-round"
             style="background-color: #27ae60"
           >
-            + Lançamento
+            +
           </button>
         </div>
 
@@ -357,9 +351,10 @@
             </button>
           </div>
         </form>
-
+        <button id="btn-toggle-filtros-financeiro" class="btn-toggle-filtros">🔍 Mostrar Filtros</button>
         <!-- Filtros Financeiros -->
-        <div class="filtros-container">
+         <div id="area-filtros-financeiro" class="escondido">
+          <div class="filtros-container">
           <div
             class="filtros-grid"
             style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr))"
@@ -391,6 +386,7 @@
           <button id="btn-limpar-filtros-fin" class="btn-secundario">
             Limpar Filtros
           </button>
+          </div>
         </div>
 
         <!-- Painel de Resumo -->
@@ -409,36 +405,37 @@
           </div>
         </div>
 
-        <!-- Lista de lançamentos -->
         <div id="lista-financeiro"></div>
       </section>
     </div>
     <!-- MODAL DE RELATÓRIOS -->
     <div id="modal-relatorios" class="escondido modal-overlay">
-      <div class="modal-content modal-largo">
-        <div class="modal-header">
-          <h3>📊 Relatórios</h3>
-          <button id="btn-fechar-relatorios" class="btn-fechar-modal">✖</button>
-        </div>
+        <div class="modal-content modal-largo">
+            <div class="modal-header">
+                <h3>📊 Relatórios</h3>
+                <button id="btn-fechar-relatorios" class="btn-fechar-modal">✖</button>
+            </div>
+            
+            <div class="opcoes-relatorio">
+                <button id="btn-rel-plantel" class="btn-acao">🐇 Relatório geral de coelhos</button>
+                <button id="btn-rel-reproducao" class="btn-acao">🍼 Desempenho reprodutivo</button>
+                <button id="btn-rel-financas" class="btn-acao">💰 Balanço Financeiro</button>
+                
+                <!-- RELATÓRIO INDIVIDUAL -->
+                <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
+                <h5 style="margin-bottom: 8px; color: #2c3e50; text-align: left;">🔍 Relatório de coelhos:</h5>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <select id="select-rel-coelho" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="">Carregando coelhos...</option>
+                    </select>
+                    <button id="btn-rel-individual" class="btn-acao" style="background-color: #8e44ad;">Gerar relatório do coelho</button>
+                </div>
+            </div>
 
-        <div class="opcoes-relatorio">
-          <button id="btn-rel-plantel" class="btn-acao">
-            🐇 Inventário do Plantel
-          </button>
-          <button id="btn-rel-reproducao" class="btn-acao">
-            🍼 Desempenho Reprodutivo
-          </button>
-          <button id="btn-rel-financas" class="btn-acao">
-            💰 Balanço Financeiro
-          </button>
+            <div id="area-resultado-relatorio">
+                <p style="color:#7f8c8d; text-align:center; margin-top:30px;">Selecione um relatório acima para gerar.</p>
+            </div>
         </div>
-
-        <div id="area-resultado-relatorio">
-          <p style="color: #7f8c8d; text-align: center; margin-top: 30px">
-            Selecione um relatório acima para gerar.
-          </p>
-        </div>
-      </div>
     </div>
     <nav class="menu-inferior">
       <button id="tab-coelhos" class="aba-ativa">
@@ -461,7 +458,7 @@
     <!-- MODAL DE CONFIRMAÇÃO DE PARTO -->
     <div id="modal-confirmacao" class="escondido modal-overlay">
       <div class="modal-content">
-        <h3>Confirmar Prenhez/Parto?</h3>
+        <h3>Confirmar gravidez/parto?</h3>
         <p>
           Isso irá agendar o parto na lista de partos para 30 dias após a data
           da cobertura.

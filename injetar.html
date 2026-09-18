@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Injetar Dados - Meu Cunicultor</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f7f9fc; }
+        #btn-injetar { background-color: #f39c12; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #btn-injetar:hover { background-color: #e67e22; }
+        #status { margin-top: 20px; font-size: 18px; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+    <h2>Ferramenta de Injeção de Dados Fictícios</h2>
+    <p>Isso enviará coelhos, partos e finanças para o seu banco de dados para testar os relatórios.</p>
+    
+    <button id="btn-injetar">Injetar Dados no Firebase</button>
+    <p id="status"></p>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyBAiMP11gBfJuWKdo7qyIwHSk7L6Bb0BZ4",
+  authDomain: "animalcontrol-3e82d.firebaseapp.com",
+  projectId: "animalcontrol-3e82d",
+  storageBucket: "animalcontrol-3e82d.firebasestorage.app",
+  messagingSenderId: "314778179089",
+  appId: "1:314778179089:web:fe34e43f218b90ecea03b0",
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById('btn-injetar').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-injetar');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            status.innerHTML = "⏳ Enviando dados para o Firebase... Aguarde!";
+            status.style.color = "#e67e22";
+
+            try {
+                // 1. GERAR COELHOS
+                const coelhosMock = [
+                    { numero: "001", nome: "Pernalonga", raca: "Nova Zelândia", sexo: "Macho", nascimento: "2025-01-15", status: "Vivo", foto: "" },
+                    { numero: "002", nome: "Floquinho", raca: "Lionhead", sexo: "Macho", nascimento: "2025-03-20", status: "Vivo", foto: "" },
+                    { numero: "003", nome: "Branca", raca: "Nova Zelândia", sexo: "Fêmea", nascimento: "2025-02-10", status: "Vivo", foto: "" },
+                    { numero: "004", nome: "Luna", raca: "Borboleta", sexo: "Fêmea", nascimento: "2025-05-05", status: "Vivo", foto: "" },
+                    { numero: "005", nome: "Pretinha", raca: "Nova Zelândia", sexo: "Fêmea", nascimento: "2025-01-20", status: "Óbito", dataObito: "2026-06-10", foto: "" }
+                ];
+                for (let c of coelhosMock) await addDoc(collection(db, "coelhos"), { ...c, dataCadastro: new Date() });
+
+                // 2. GERAR PARTOS FINALIZADOS
+                const partosMock = [
+                    { femea: "Branca | #003", macho: "Pernalonga | #001", dataCruzamento: "2026-01-10", dataPrevistaParto: "2026-02-09", status: "Desmame Concluído", vivos: 8, mortos: 1, dataNascimentoReal: "2026-02-09", desmamados: 7, pesoMedio: "0.850", dataDesmameReal: "2026-03-15", obsDesmame: "Matriz excelente de leite." },
+                    { femea: "Luna | #004", macho: "Floquinho | #002", dataCruzamento: "2026-03-01", dataPrevistaParto: "2026-03-31", status: "Desmame Concluído", vivos: 6, mortos: 0, dataNascimentoReal: "2026-03-30", desmamados: 6, pesoMedio: "0.920", dataDesmameReal: "2026-05-05", obsDesmame: "Todos saudáveis, para venda." },
+                    { femea: "Branca | #003", macho: "Floquinho | #002", dataCruzamento: "2026-05-15", dataPrevistaParto: "2026-06-14", status: "Desmame Concluído", vivos: 9, mortos: 2, dataNascimentoReal: "2026-06-15", desmamados: 6, pesoMedio: "0.780", dataDesmameReal: "2026-07-20", obsDesmame: "Perda na amamentação por frio." },
+                    { femea: "Luna | #004", macho: "Pernalonga | #001", dataCruzamento: "2026-08-20", dataPrevistaParto: "2026-09-19", status: "Aguardando Nascimento", dataCadastro: new Date() }
+                ];
+                for (let p of partosMock) await addDoc(collection(db, "partos"), { ...p, dataCadastro: new Date() });
+
+                // 3. GERAR FINANÇAS
+                const financasMock = [
+                    { tipo: "Entrada", data: "2026-03-20", valor: 450.00, categoria: "Compra/Venda de Coelho", descricao: "Venda de 5 filhotes da ninhada 1" },
+                    { tipo: "Saída", data: "2026-03-25", valor: 180.00, categoria: "Ração e Alimentação", descricao: "Compra 2 sacos de ração 20kg" },
+                    { tipo: "Saída", data: "2026-04-10", valor: 65.00, categoria: "Medicamentos/Veterinário", descricao: "Vitaminas e vermífugo" },
+                    { tipo: "Entrada", data: "2026-05-15", valor: 540.00, categoria: "Compra/Venda de Coelho", descricao: "Venda de 6 filhotes da ninhada 2" },
+                    { tipo: "Saída", data: "2026-06-05", valor: 350.00, categoria: "Acessórios e Instalações", descricao: "Compra de 2 novas gaiolas de engorda" },
+                    { tipo: "Saída", data: "2026-07-02", valor: 200.00, categoria: "Ração e Alimentação", descricao: "Compra ração peletizada" },
+                    { tipo: "Entrada", data: "2026-08-01", valor: 360.00, categoria: "Compra/Venda de Coelho", descricao: "Venda de 4 filhotes" }
+                ];
+                for (let f of financasMock) await addDoc(collection(db, "financeiro"), { ...f, dataCadastro: new Date() });
+
+                status.innerHTML = "✅ <strong>Sucesso!</strong> Os dados foram injetados. Você já pode fechar esta aba, apagar este arquivo e abrir o seu aplicativo principal!";
+                status.style.color = "#27ae60";
+                
+            } catch(e) {
+                console.error(e);
+                status.innerHTML = "❌ <strong>Erro:</strong> Houve um problema. Verifique se você colocou suas chaves do Firebase corretamente no código.";
+                status.style.color = "#e74c3c";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
