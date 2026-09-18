@@ -24,6 +24,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const menuInferior = document.querySelector('menu-inferior') || document.getElementById('menu-inferior'); 
 
 // --- NAVEGAÇÃO INTELIGENTE DE ABAS ---
 const abas = ["coelhos", "cobertura", "partos", "financeiro"];
@@ -851,6 +852,7 @@ document
   .getElementById("btn-abrir-relatorios")
   .addEventListener("click", () => {
     modalRelatorios.classList.remove("escondido");
+    if (menuInferior) menuInferior.classList.add('escondido');
     areaRelatorio.innerHTML =
       '<p style="color:#7f8c8d; text-align:center; margin-top:30px;">Selecione um relatório acima.</p>';
   });
@@ -858,6 +860,7 @@ document
   .getElementById("btn-fechar-relatorios")
   .addEventListener("click", () => {
     modalRelatorios.classList.add("escondido");
+    if (menuInferior) menuInferior.classList.remove('escondido');
   });
 
 // 1. RELATÓRIO DE PLANTEL
@@ -1066,6 +1069,25 @@ btnToggleFiltrosFinanceiro.addEventListener('click', () => {
         btnToggleFiltrosFinanceiro.style.backgroundColor = '#f1f2f6'; // Volta a cor normal
     }
 });
+
+
+// 1. QUANDO ABRIR OS RELATÓRIOS:
+function abrirModalRelatorios() {
+    const modal = document.getElementById('modal-relatorios');
+    modal.classList.remove('escondido');
+    
+    // Esconde o menu inferior
+    if (menuInferior) menuInferior.classList.add('escondido');
+}
+
+// 2. QUANDO FECHAR OS RELATÓRIOS:
+function fecharModalRelatorios() {
+    const modal = document.getElementById('modal-relatorios');
+    modal.classList.add('escondido');
+    
+    // Exibe novamente o menu inferior
+    if (menuInferior) menuInferior.classList.remove('escondido');
+}
 
 // Inicia as leituras
 lerCoelhos();
