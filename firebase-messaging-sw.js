@@ -17,32 +17,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Força o Service Worker a assumir o controle imediatamente
+// Instalação e ativação imediata do Service Worker
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) =>
   event.waitUntil(self.clients.claim()),
 );
 
-// Captura o Push nativo do Android/iOS mesmo com o navegador suspenso
-self.addEventListener("push", (event) => {
-  if (!event.data) return;
+// Escuta ÚNICA de segundo plano via Firebase SDK
+messaging.onBackgroundMessage((payload) => {
+  console.log("[firebase-messaging-sw.js] Notificação recebida:", payload);
 
-  try {
-    const payload = event.data.json();
-    const title =
-      payload.notification?.title || payload.data?.title || "🐰 AnimalControl";
-    const options = {
-      body:
-        payload.notification?.body || payload.data?.body || "Novo lembrete!",
-      icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
-      badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
-      vibrate: [200, 100, 200],
-      data: payload.data || {},
-    };
+  const notificationTitle =
+    payload.notification?.title || payload.data?.title || "🐰 AnimalControl";
+  const notificationOptions = {
+    body: payload.notification?.body || payload.data?.body || "Novo lembrete!",
+    icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+    badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+    vibrate: [200, 100, 200],
+  };
 
-    // O waitUntil obriga o celular a exibir a notificação antes de fechar o processo
-    event.waitUntil(self.registration.showNotification(title, options));
-  } catch (err) {
-    console.error("Erro ao processar evento de push:", err);
-  }
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
