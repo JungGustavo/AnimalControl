@@ -39,13 +39,36 @@ async function processarNotificacoes() {
       // Se a notificação tiver um token FCM gravado, envia a Push Notification
       if (notif.tokenFcm) {
         const message = {
+          // Notificação visual padrão
           notification: {
             title: "🐰 AnimalControl - Lembrete",
             body: notif.mensagem,
           },
+          // Payload de dados que acorda o Service Worker móbile
+          data: {
+            title: "🐰 AnimalControl - Lembrete",
+            body: notif.mensagem,
+          },
+          android: {
+            priority: "high", // Força a entrega imediata no Android
+            notification: {
+              sound: "default",
+              channelId: "default",
+              priority: "high",
+            },
+          },
+          webpush: {
+            headers: {
+              Urgency: "high", // Urgência máxima para o protocolo WebPush
+            },
+            notification: {
+              icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+              badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+              requireInteraction: true, // Mantém o alerta no ecrã do celular até o usuário interagir
+            },
+          },
           token: notif.tokenFcm,
         };
-
         try {
           await messaging.send(message);
           console.log(`🚀 Push enviado com sucesso para: "${notif.mensagem}"`);
