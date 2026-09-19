@@ -1,4 +1,3 @@
-// Importa as bibliotecas do Firebase dentro do Service Worker
 importScripts(
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js",
 );
@@ -18,23 +17,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// 1. FORÇA A ATIVAÇÃO IMEDIATA DO SERVICE WORKER (Fica no escopo raiz do arquivo)
+// Força o Service Worker a assumir o controle imediatamente
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) =>
   event.waitUntil(self.clients.claim()),
 );
 
-// 2. ESCUTA NOTIFICAÇÕES EM SEGUNDO PLANO (Com a aba ou app fechado)
-messaging.onBackgroundMessage((payload) => {
-  console.log("[sw.js] Notificação recebida em segundo plano:", payload);
+// Captura o Push nativo do Android/iOS mesmo com o navegador suspenso
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
 
-  const notificationTitle = payload.notification?.title || "🐰 AnimalControl";
-  const notificationOptions = {
-    body:
-      payload.notification?.body || payload.data?.mensagem || "Novo lembrete!",
-    icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
-    badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
-  };
+  try {
+    const payload = event.data.json();
+    const title =
+      payload.notification?.title || payload.data?.title || "🐰 AnimalControl";
+    const options = {
+      body:
+        payload.notification?.body || payload.data?.body || "Novo lembrete!",
+      icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+      badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+      vibrate: [200, 100, 200],
+      data: payload.data || {},
+    };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+    // O waitUntil obriga o celular a exibir a notificação antes de fechar o processo
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (err) {
+    console.error("Erro ao processar evento de push:", err);
+  }
 });
