@@ -1,0 +1,30 @@
+name: Disparo de Notificações AnimalControl
+
+on:
+  schedule:
+    # Agendamento CRON (UTC):
+    # 09:00 UTC = 06:00 BRT (Horário de Brasília)
+    # 23:00 UTC = 20:00 BRT (Horário de Brasília)
+    - cron: "0 9,23 * * *"
+  workflow_dispatch: # Permite testar manualmente no GitHub quando quiser!
+
+jobs:
+  verificar-e-enviar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v3
+
+      - name: Configurar ambiente Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Instalar Firebase Admin SDK
+        run: npm install firebase-admin
+
+      - name: Executar script de envio de notificações
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/enviar-notificacoes.js

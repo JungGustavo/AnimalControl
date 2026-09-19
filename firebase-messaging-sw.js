@@ -14,16 +14,24 @@ const firebaseConfig = {
   messagingSenderId: "314778179089",
   appId: "1:314778179089:web:fe34e43f218b90ecea03b0",
 };
+
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Escuta notificações enviadas em segundo plano (com a aba fechada)
+// 1. FORÇA A ATIVAÇÃO IMEDIATA DO SERVICE WORKER (Fica no escopo raiz do arquivo)
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) =>
+  event.waitUntil(self.clients.claim()),
+);
+
+// 2. ESCUTA NOTIFICAÇÕES EM SEGUNDO PLANO (Com a aba ou app fechado)
 messaging.onBackgroundMessage((payload) => {
   console.log("[sw.js] Notificação recebida em segundo plano:", payload);
 
-  const notificationTitle = payload.notification.title || "🐰 AnimalControl";
+  const notificationTitle = payload.notification?.title || "🐰 AnimalControl";
   const notificationOptions = {
-    body: payload.notification.body,
+    body:
+      payload.notification?.body || payload.data?.mensagem || "Novo lembrete!",
     icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
     badge: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
   };
