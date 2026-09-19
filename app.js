@@ -19,6 +19,15 @@ import {
   getMessaging,
   getToken,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+import {
+  getAuth,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBAiMP11gBfJuWKdo7qyIwHSk7L6Bb0BZ4",
@@ -29,11 +38,12 @@ const firebaseConfig = {
   appId: "1:314778179089:web:fe34e43f218b90ecea03b0",
 };
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 const VAPID_KEY =
   "BICLsuFpQ0bt6Hu44nWW4geizrGla7LGWZRlsnaaJ4LrlXmqsXKfNszDuMj1RCn-4lC3ABw0AxyrvwvKy0CE1JY";
-
 // --- MÓDULO DE NOTIFICAÇÕES ---
 const btnAbrirNotificacao = document.getElementById("btn-abrir-notificacao");
 const modalNotificacao = document.getElementById("modal-notificacao");
@@ -45,8 +55,111 @@ const btnFecharNotificacao = document.getElementById("btn-fechar-notificacao");
 const listaNotificacoesEl = document.getElementById(
   "lista-notificacoes-ativas",
 );
+
+// 1. SOLICITAR PERMISSÃO NATIVA
+async function solicitarPermissaoNotificacao() {
+  if ("Notification" in window) {
+    const permissao = await Notification.requestPermission();
+    return permissao === "granted";
+  }
+  return false;
+}
 const menuInferior =
   document.querySelector("nav") || document.getElementById("menu-inferior");
+// -- Auth ---
+let usuarioAtualId = null;
+// MONITORAR AUTENTICAÇÃO E FORÇAR LOGIN AUTOMÁTICO
+// Função auxiliar para tentar o Login (Popup primário, Redirect como Fallback)
+async function iniciarLogin() {
+  try {
+    // Tenta primeiro abrir via Popup
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    console.warn(
+      "Popup bloqueado ou falhou. Usando Redirecionamento...",
+      error,
+    );
+
+    // Se o popup for bloqueado pelo navegador (ex: popup_blocked_by_browser), utiliza o Redirect
+    if (
+      error.code === "auth/popup-blocked" ||
+      error.code === "auth/cancelled-by-user" ||
+      error.code === "auth/popup-closed-by-user"
+    ) {
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (redirectErr) {
+        console.error("Erro ao redirecionar para o login:", redirectErr);
+      }
+    }
+  }
+}
+
+// MONITORAR ESTADO DA AUTENTICAÇÃO
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    if (btnLogin) btnLogin.innerText = `👤 ${user.displayName.split(" ")[0]}`;
+    if (btnLogout) btnLogout.classList.remove("escondido"); // Exibe o botão de Sair
+  } else {
+    if (btnLogin) btnLogin.innerText = "🔑 Entrar com Google";
+    if (btnLogout) btnLogout.classList.add("escondido"); // Esconde o botão de Sair
+  }
+  if (user) {
+    usuarioAtualId = user.uid;
+    console.log("Usuário autenticado:", user.displayName, usuarioAtualId);
+
+    const btnLogin = document.getElementById("btn-login");
+    if (btnLogin) {
+      btnLogin.style.backgroundColor = "#27ae60";
+      btnLogin.innerHTML = `👤 ${user.displayName.split(" ")[0]} (Sair)`;
+    }
+
+    await registarTokenDispositivoUtilizador(usuarioAtualId);
+    carregarDadosAplicacao();
+  } else {
+    usuarioAtualId = null;
+    console.log("Nenhuma sessão ativa encontrada.");
+  }
+});
+
+// Evento do botão no topo para permitir trocar de conta/sair
+const btnLogin = document.getElementById("btn-login");
+if (btnLogin) {
+  btnLogin.addEventListener("click", async () => {
+    if (auth.currentUser) {
+      if (confirm(`Deseja sair da conta ${auth.currentUser.displayName}?`)) {
+        await signOut(auth);
+        carregarDadosAplicacao();
+      }
+    } else {
+      // Quando o clique é iniciado diretamente pelo usuário, chamamos a função
+      await iniciarLogin();
+    }
+  });
+}
+
+const btnLogout = document.getElementById("btn-logout");
+
+if (btnLogout) {
+  btnLogout.addEventListener("click", async () => {
+    if (confirm("Deseja realmente sair da sua conta?")) {
+      await signOut(auth);
+    }
+  });
+}
+
+// Vincula o Token FCM do dispositivo atual ao utilizador no Firestore
+async function registarTokenDispositivoUtilizador(uid) {
+  const token = await obterTokenFCM();
+  if (token) {
+    // Guarda na coleção do utilizador para envio multi-dispositivo
+    await setDoc(doc(db, "usuarios", uid, "tokens", token), {
+      token: token,
+      atualizadoEm: new Date(),
+      userAgent: navigator.userAgent,
+    });
+  }
+}
 
 function configurarDataMinimaNotificacao() {
   const campoData = document.getElementById("data-notificacao");
@@ -71,15 +184,6 @@ if (textoNotificacao && contadorCaracteres) {
   });
 }
 
-// 2. PERMISSÃO DE NOTIFICAÇÃO
-async function solicitarPermissaoNotificacao() {
-  if ("Notification" in window) {
-    const permissao = await Notification.requestPermission();
-    return permissao === "granted";
-  }
-  return false;
-}
-
 // 3. CAMINHO DINÂMICO PARA SERVICE WORKER (Local x GitHub Pages)
 function obterCaminhoServiceWorker() {
   const isGithubPages = window.location.hostname.includes("github.io");
@@ -92,22 +196,47 @@ function obterCaminhoServiceWorker() {
 async function obterTokenFCM() {
   try {
     const swPath = obterCaminhoServiceWorker();
+
+    // Registra e aguarda o Service Worker estar pronto
     const registration = await navigator.serviceWorker.register(swPath);
+    await navigator.serviceWorker.ready;
 
     const tokenAtual = await getToken(messaging, {
       vapidKey: VAPID_KEY,
       serviceWorkerRegistration: registration,
     });
 
-    return tokenAtual || null;
+    if (tokenAtual) {
+      console.log("Token FCM obtido com sucesso.");
+      return tokenAtual;
+    } else {
+      console.log("Nenhum token FCM gerado.");
+      return null;
+    }
   } catch (err) {
     console.error("Erro ao obter Token FCM:", err);
     return null;
   }
 }
 
-// 5. AGENDAMENTO LOCAL
+// 5. AGENDAMENTO TEMPORÁRIO LOCAL (Quando a aba continua aberta)
 function agendarNotificacaoLocal(mensagem, dataStr) {
+  const hojeStr = new Date().toISOString().split("T")[0];
+
+  // Se o lembrete for para HOJE, dispara em 3 segundos para testar/notificar imediatamente
+  if (dataStr === hojeStr) {
+    setTimeout(() => {
+      if (Notification.permission === "granted") {
+        new Notification("🐰 AnimalControl - Lembrete de Hoje", {
+          body: mensagem,
+          icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+        });
+      }
+    }, 3000); // 3 segundos
+    return;
+  }
+
+  // Se for para datas futuras
   const dataAlvo = new Date(dataStr + "T09:00:00");
   const agora = new Date();
   const tempoRestante = dataAlvo.getTime() - agora.getTime();
@@ -124,9 +253,13 @@ function agendarNotificacaoLocal(mensagem, dataStr) {
   }
 }
 
-// 6. SALVAR NOTIFICAÇÃO (ÚNICO EVENTO DE CLIQUE)
 if (btnSalvarNotificacao) {
   btnSalvarNotificacao.addEventListener("click", async () => {
+    if (!usuarioAtualId) {
+      alert("Você precisa estar autenticado.");
+      return;
+    }
+
     const texto = textoNotificacao.value.trim();
     const dataAlvo = dataNotificacao.value;
 
@@ -134,22 +267,26 @@ if (btnSalvarNotificacao) {
       alert("Por favor, preencha a mensagem e a data.");
       return;
     }
+
+    // Validação de data passada
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-
     const [ano, mes, dia] = dataAlvo.split("-");
     const dataSelecionada = new Date(ano, mes - 1, dia);
 
     if (dataSelecionada < hoje) {
       alert(
-        "❌ Não é possível agendar notificações para datas que já passaram!",
+        "❌ Não é possível agendar notificações para datas que já passaram.",
       );
       return;
     }
 
+    // Solicita permissão de notificação antes de tentar obter o Token
     const permissaoConcedida = await solicitarPermissaoNotificacao();
     if (!permissaoConcedida) {
-      alert("Você precisa permitir as notificações para receber lembretes.");
+      alert(
+        "Você precisa permitir as notificações no navegador para receber lembretes.",
+      );
       return;
     }
 
@@ -157,11 +294,10 @@ if (btnSalvarNotificacao) {
     btnSalvarNotificacao.innerText = "⏳ Agendando...";
 
     try {
-      // Obtém o token FCM em background sem travar a execução caso falhe
       const tokenDispositivo = await obterTokenFCM();
 
-      // Salva no Firestore (Apenas 1 chamada)
       await addDoc(collection(db, "notificacoes"), {
+        userId: usuarioAtualId,
         mensagem: texto,
         dataAgendada: dataAlvo,
         tokenFcm: tokenDispositivo,
@@ -172,13 +308,11 @@ if (btnSalvarNotificacao) {
       agendarNotificacaoLocal(texto, dataAlvo);
 
       alert("🔔 Lembrete agendado com sucesso!");
-
-      // Reseta os campos e atualiza a listagem
       textoNotificacao.value = "";
       dataNotificacao.value = "";
       if (contadorCaracteres) contadorCaracteres.innerText = "0/240";
 
-      fecharModalNotificacao();
+      carregarNotificacoesAtivas();
     } catch (erro) {
       console.error("Erro ao agendar notificação:", erro);
       alert("Erro ao salvar a notificação no banco de dados.");
@@ -214,9 +348,8 @@ if (btnFecharNotificacao) {
   btnFecharNotificacao.addEventListener("click", fecharModalNotificacao);
 }
 
-// 8. LISTAGEM E EXCLUSÃO DE NOTIFICAÇÕES
 async function carregarNotificacoesAtivas() {
-  if (!listaNotificacoesEl) return;
+  if (!usuarioAtualId || !listaNotificacoesEl) return;
 
   listaNotificacoesEl.innerHTML =
     '<p style="color: #7f8c8d; font-size: 14px;">Carregando...</p>';
@@ -224,6 +357,7 @@ async function carregarNotificacoesAtivas() {
   try {
     const q = query(
       collection(db, "notificacoes"),
+      where("userId", "==", usuarioAtualId),
       where("exibido", "==", false),
       orderBy("dataAgendada", "asc"),
     );
@@ -241,7 +375,6 @@ async function carregarNotificacoesAtivas() {
     snapshot.forEach((documento) => {
       const notif = documento.data();
       const id = documento.id;
-
       const partesData = notif.dataAgendada.split("-");
       const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
 
@@ -366,6 +499,10 @@ fotoInput.addEventListener("change", function (event) {
 
 formCoelho.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (!usuarioAtualId) {
+    alert("Você precisa estar conectado para salvar.");
+    return;
+  }
   if (!fotoComprimidaBase64) {
     alert("Aguarde a foto carregar.");
     return;
@@ -383,6 +520,7 @@ formCoelho.addEventListener("submit", async (e) => {
       nascimento: document.getElementById("nascimento").value,
       observacoes: document.getElementById("observacoes").value,
       foto: fotoComprimidaBase64,
+      userId: usuarioAtualId,
       dataCadastro: new Date(),
     });
     formCoelho.reset();
@@ -407,7 +545,13 @@ const filtroStatus = document.getElementById("filtro-status");
 if (filtroStatus) filtroStatus.addEventListener("change", aplicarFiltros);
 
 function lerCoelhos() {
-  const q = query(collection(db, "coelhos"), orderBy("dataCadastro", "desc"));
+  if (!usuarioAtualId) return;
+  const q = query(
+    collection(db, "coelhos"),
+    where("userId", "==", usuarioAtualId),
+    orderBy("dataCadastro", "desc"),
+  );
+
   onSnapshot(q, (snapshot) => {
     todosCoelhos = [];
     snapshot.forEach((doc) => {
@@ -520,6 +664,7 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 // MÓDULO 2: COBERTURA E AUTOMAÇÃO DE PARTOS
 // ==========================================
 function atualizarSelectsCobertura() {
+  if (!usuarioAtualId) return;
   const selFemea = document.getElementById("cobertura-femea");
   const selMacho = document.getElementById("cobertura-macho");
   const selRelCoelho = document.getElementById("select-rel-coelho"); // Novo select do relatório
@@ -566,7 +711,8 @@ formCobertura.addEventListener("submit", async (e) => {
       femea: document.getElementById("cobertura-femea").value,
       macho: document.getElementById("cobertura-macho").value,
       dataCobertura: document.getElementById("data-cobertura").value,
-      partoConfirmado: false, // FLAG que diz se já gerou parto ou não
+      partoConfirmado: false,
+      userId: usuarioAtualId,
       dataCadastro: new Date(),
     });
     formCobertura.reset();
@@ -582,8 +728,10 @@ formCobertura.addEventListener("submit", async (e) => {
 // 2. Leitura de Coberturas (Com Botão de Confirmar)
 const listaCoberturas = document.getElementById("lista-coberturas");
 function lerCoberturas() {
+  if (!usuarioAtualId) return;
   const q = query(
     collection(db, "coberturas"),
+    where("userId", "==", usuarioAtualId),
     orderBy("dataCobertura", "desc"),
   );
   onSnapshot(q, (snapshot) => {
@@ -648,6 +796,7 @@ document
 
     try {
       // Calcula a data +30 dias
+      if (!usuarioAtualId) return;
       const dataPrevista = new Date(dadosPartoPendente.dataCruz);
       dataPrevista.setDate(dataPrevista.getDate() + 30);
       const stringDataPrevista = dataPrevista.toISOString().split("T")[0];
@@ -659,6 +808,7 @@ document
         macho: dadosPartoPendente.macho,
         dataCruzamento: dadosPartoPendente.dataCruz,
         dataPrevistaParto: stringDataPrevista,
+        userId: usuarioAtualId,
         status: "Aguardando Nascimento",
         dataCadastro: new Date(),
       });
@@ -690,7 +840,11 @@ function obterDataDeHoje() {
 
 // LER PARTOS
 function lerPartos() {
-  const q = query(collection(db, "partos"), orderBy("dataCadastro", "desc"));
+  const q = query(
+    collection(db, "partos"),
+    where("userId", "==", usuarioAtualId),
+    orderBy("dataCadastro", "desc"),
+  );
   onSnapshot(q, (snapshot) => {
     listaPartos.innerHTML = "";
     if (snapshot.empty) {
@@ -871,6 +1025,7 @@ formRegistroParto.addEventListener("submit", async (e) => {
       mortos: Number(document.getElementById("qtd-mortos").value),
       dataNascimentoReal: dataNascimento,
       dataPrevistaDesmame: dataPrevistaDesmame,
+      userId: usuarioAtualId,
     });
     formRegistroParto.reset();
     formRegistroParto.classList.add("escondido");
@@ -892,6 +1047,7 @@ formRegistroDesmame.addEventListener("submit", async (e) => {
       pesoMedio: document.getElementById("peso-medio").value, // NOVO: Salva o peso no banco
       dataDesmameReal: document.getElementById("data-desmame").value,
       obsDesmame: document.getElementById("obs-desmame").value,
+      userId: usuarioAtualId,
     });
     formRegistroDesmame.reset();
     formRegistroDesmame.classList.add("escondido");
@@ -935,6 +1091,7 @@ formFinanceiro.addEventListener("submit", async (e) => {
       valor: Number(document.getElementById("fin-valor").value),
       categoria: document.getElementById("fin-categoria").value,
       descricao: document.getElementById("fin-descricao").value,
+      userId: usuarioAtualId,
       dataCadastro: new Date(),
     });
     formFinanceiro.reset();
@@ -949,7 +1106,11 @@ formFinanceiro.addEventListener("submit", async (e) => {
 
 // 2. Leitura
 function lerFinanceiro() {
-  const q = query(collection(db, "financeiro"), orderBy("data", "desc"));
+  const q = query(
+    collection(db, "financeiro"),
+    where("userId", "==", usuarioAtualId),
+    orderBy("data", "desc"),
+  );
   onSnapshot(q, (snapshot) => {
     todasFinancas = [];
     snapshot.forEach((docSnap) => {
@@ -1066,6 +1227,7 @@ window.excluirCobertura = async function (id) {
     const qPartos = query(
       collection(db, "partos"),
       where("coberturaId", "==", id),
+      where("userId", "==", usuarioAtualId),
     );
     const partosSnaps = await getDocs(qPartos);
 
@@ -1135,13 +1297,14 @@ const campoNotas = document.getElementById("texto-bloco-notas");
 const btnFecharNotas = document.getElementById("btn-fechar-notas");
 const btnSalvarNotas = document.getElementById("btn-salvar-notas");
 
-// Referência fixa do documento de notas no Firestore
-const docNotasRef = doc(db, "anotacoes", "bloco_geral");
-
 // 1. ABRIR NOTAS E BUSCAR DO FIRESTORE
 document
   .getElementById("btn-abrir-notas")
   .addEventListener("click", async () => {
+    if (!usuarioAtualId) {
+      alert("Faça login para continuar!");
+      return;
+    }
     modalNotas.classList.remove("escondido");
     if (menuInferior) menuInferior.classList.add("escondido");
 
@@ -1150,15 +1313,9 @@ document
     campoNotas.disabled = true;
 
     try {
-      const docNotasRef = doc(db, "anotacoes", "bloco_geral");
-
-      // Timeout de segurança caso a rede demore
-      const buscaPromise = getDoc(docNotasRef);
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 5000),
-      );
-
-      const docSnap = await Promise.race([buscaPromise, timeoutPromise]);
+      // Documento individual de notas por usuário
+      const docNotasRef = doc(db, "anotacoes", usuarioAtualId);
+      const docSnap = await getDoc(docNotasRef);
 
       if (docSnap.exists()) {
         campoNotas.value = docSnap.data().texto || "";
@@ -1166,8 +1323,7 @@ document
         campoNotas.value = "";
       }
     } catch (error) {
-      console.error("Erro ao carregar notas:", error);
-      campoNotas.value = "";
+      console.error("Erro ao carregar nota:", error);
     } finally {
       campoNotas.placeholder = "Escreva suas anotações aqui...";
       campoNotas.disabled = false;
@@ -1186,14 +1342,16 @@ if (btnFecharNotas) btnFecharNotas.addEventListener("click", fecharModalNotas);
 // 3. SALVAR NOTAS NO FIRESTORE
 if (btnSalvarNotas) {
   btnSalvarNotas.addEventListener("click", async () => {
-    const texto = campoNotas.value;
+    if (!usuarioAtualId) return;
 
+    const texto = campoNotas.value;
     btnSalvarNotas.disabled = true;
     btnSalvarNotas.innerText = "⏳ Salvando...";
 
     try {
-      const docNotasRef = doc(db, "anotacoes", "bloco_geral");
+      const docNotasRef = doc(db, "anotacoes", usuarioAtualId);
       await setDoc(docNotasRef, {
+        userId: usuarioAtualId,
         texto: texto,
         ultimaAtualizacao: new Date(),
       });
@@ -1430,11 +1588,13 @@ btnToggleFiltrosFinanceiro.addEventListener("click", () => {
 
 // Checa notificações pendentes salvas no Firestore quando o usuário abre o app
 async function checarNotificacoesPendentes() {
+  if (!usuarioAtualId) return;
+
   const hojeStr = new Date().toISOString().split("T")[0];
 
-  // Busca notificações cuja data é igual ou menor que hoje e ainda não foram exibidas
   const q = query(
     collection(db, "notificacoes"),
+    where("userId", "==", usuarioAtualId),
     where("dataAgendada", "<=", hojeStr),
     where("exibido", "==", false),
   );
@@ -1444,19 +1604,30 @@ async function checarNotificacoesPendentes() {
     const notif = docSnap.data();
 
     if (Notification.permission === "granted") {
-      new Notification("🐰 Lembrete Pendente", {
+      new Notification("🐰 AnimalControl - Lembrete", {
         body: notif.mensagem,
+        icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
       });
     }
 
-    // Marca como exibido no Firestore para não repetir
+    // Marca como exibido no banco para não repetir
     await updateDoc(doc(db, "notificacoes", docSnap.id), { exibido: true });
   });
 }
 
-// Inicia as leituras
-lerCoelhos();
-lerCoberturas();
-lerPartos();
-lerFinanceiro();
-checarNotificacoesPendentes();
+function carregarDadosAplicacao() {
+  if (!usuarioAtualId) return;
+  carregarNotificacoesAtivas();
+  lerCoelhos();
+  lerCoberturas();
+  lerPartos();
+  lerFinanceiro();
+  checarNotificacoesPendentes();
+  resetData();
+}
+
+function resetData() {
+  todosCoelhos = [];
+  todosPartos = [];
+  todasFinancas = [];
+}

@@ -4,20 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <div class="header-topo">
-            <h1>🐰 Meus coelhos</h1>
-            <div class="div-menu-superior">
-<button id="btn-abrir-relatorios" class="btn-relatorios" title="Abrir relatórios">
-                📊 <span class="texto-oculto-mobile">Relatórios</span>
-            </button>
-            <button id="btn-abrir-notas" class="btn-relatorios" title="Abrir notas">
-                📝 <span class="texto-oculto-mobile">Notas</span>
-            </button>
-            <button id="btn-abrir-notificacao" class="btn-relatorios" title="Notificações">
-                🔔 <span class="texto-oculto-mobile">Notificações</span>
-            </button>
-            </div>
-            
-        </div>
+      <h1>🐰 Meus coelhos</h1>
+      <div class="div-menu-superior">
+        <button
+          id="btn-abrir-relatorios"
+          class="btn-relatorios"
+          title="Abrir relatórios"
+        >
+          📊 <span class="texto-oculto-mobile">Relatórios</span>
+        </button>
+        <button id="btn-abrir-notas" class="btn-relatorios" title="Abrir notas">
+          📝 <span class="texto-oculto-mobile">Notas</span>
+        </button>
+        <button
+          id="btn-abrir-notificacao"
+          class="btn-relatorios"
+          title="Notificações"
+        >
+          🔔 <span class="texto-oculto-mobile">Notificações</span>
+        </button>
+        <button
+          id="btn-login"
+          style="
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+          "
+        >
+          🔑 Entrar com Google
+        </button>
+      </div>
+    </div>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -31,13 +52,17 @@
           </button>
         </div>
 
-        <form id="form-coelho" class="escondido" style="
+        <form
+          id="form-coelho"
+          class="escondido"
+          style="
             background: #fff;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             border: 2px solid #27ae60;
-          ">
+          "
+        >
           <div class="form-group">
             <label>Número/ID</label><input type="text" id="numero" required />
           </div>
@@ -84,31 +109,53 @@
           </div>
         </form>
 
-        <button id="btn-toggle-filtros" class="btn-toggle-filtros">🔍 Mostrar Filtros</button>
+        <button id="btn-toggle-filtros" class="btn-toggle-filtros">
+          🔍 Mostrar Filtros
+        </button>
 
-            <!-- ÁREA DE FILTROS (Agrupada e Oculta por padrão) -->
-            <div id="area-filtros-coelhos" class="escondido">
-                <div class="filtros-grid">
-                    <div class="form-group"><input type="text" id="filtro-nome" placeholder="Buscar por nome/número..."></div>
-                    <div class="form-group"><input type="text" id="filtro-raca" placeholder="Buscar por raça..."></div>
-                    <div class="form-group"><input type="date" id="filtro-nascimento"></div>
-                    <div class="form-group">
-                        <select id="filtro-sexo">
-                            <option value="">Todos os sexos</option>
-                            <option value="Macho">Macho</option>
-                            <option value="Fêmea">Fêmea</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select id="filtro-status">
-                            <option value="Vivo">Apenas Vivos</option>
-                            <option value="Óbito">Apenas Óbitos</option>
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                </div>
-                <button id="btn-limpar-filtros" class="btn-secundario" style="margin-bottom: 15px;">Limpar Filtros</button>
+        <!-- ÁREA DE FILTROS (Agrupada e Oculta por padrão) -->
+        <div id="area-filtros-coelhos" class="escondido">
+          <div class="filtros-grid">
+            <div class="form-group">
+              <input
+                type="text"
+                id="filtro-nome"
+                placeholder="Buscar por nome/número..."
+              />
             </div>
+            <div class="form-group">
+              <input
+                type="text"
+                id="filtro-raca"
+                placeholder="Buscar por raça..."
+              />
+            </div>
+            <div class="form-group">
+              <input type="date" id="filtro-nascimento" />
+            </div>
+            <div class="form-group">
+              <select id="filtro-sexo">
+                <option value="">Todos os sexos</option>
+                <option value="Macho">Macho</option>
+                <option value="Fêmea">Fêmea</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <select id="filtro-status">
+                <option value="Vivo">Apenas Vivos</option>
+                <option value="Óbito">Apenas Óbitos</option>
+                <option value="">Todos</option>
+              </select>
+            </div>
+          </div>
+          <button
+            id="btn-limpar-filtros"
+            class="btn-secundario"
+            style="margin-bottom: 15px"
+          >
+            Limpar Filtros
+          </button>
+        </div>
         <div id="lista-coelhos"></div>
       </section>
 
@@ -120,13 +167,17 @@
             +
           </button>
         </div>
-        <form id="form-cobertura" class="escondido" style="
+        <form
+          id="form-cobertura"
+          class="escondido"
+          style="
             background: #fff;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             border: 2px solid #27ae60;
-          ">
+          "
+        >
           <div class="form-group">
             <label>Selecione a Fêmea</label>
             <select id="cobertura-femea" required></select>
@@ -360,41 +411,45 @@
             </button>
           </div>
         </form>
-        <button id="btn-toggle-filtros-financeiro" class="btn-toggle-filtros">🔍 Mostrar Filtros</button>
+        <button id="btn-toggle-filtros-financeiro" class="btn-toggle-filtros">
+          🔍 Mostrar Filtros
+        </button>
         <!-- Filtros Financeiros -->
-         <div id="area-filtros-financeiro" class="escondido">
+        <div id="area-filtros-financeiro" class="escondido">
           <div class="filtros-container">
-          <div
-            class="filtros-grid"
-            style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr))"
-          >
-            <div class="form-group">
-              <label>Mês / Ano</label>
-              <input type="month" id="filtro-fin-mes" />
+            <div
+              class="filtros-grid"
+              style="
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+              "
+            >
+              <div class="form-group">
+                <label>Mês / Ano</label>
+                <input type="month" id="filtro-fin-mes" />
+              </div>
+              <div class="form-group">
+                <label>Tipo</label>
+                <select id="filtro-fin-tipo">
+                  <option value="">Todos</option>
+                  <option value="Entrada">Apenas Entradas</option>
+                  <option value="Saída">Apenas Saídas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Categoria</label>
+                <select id="filtro-fin-categoria">
+                  <option value="">Todas as Categorias</option>
+                  <option value="Compra/Venda de Coelho">Compra/Venda</option>
+                  <option value="Ração e Alimentação">Ração</option>
+                  <option value="Medicamentos/Veterinário">Saúde</option>
+                  <option value="Acessórios e Instalações">Estrutura</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Tipo</label>
-              <select id="filtro-fin-tipo">
-                <option value="">Todos</option>
-                <option value="Entrada">Apenas Entradas</option>
-                <option value="Saída">Apenas Saídas</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Categoria</label>
-              <select id="filtro-fin-categoria">
-                <option value="">Todas as Categorias</option>
-                <option value="Compra/Venda de Coelho">Compra/Venda</option>
-                <option value="Ração e Alimentação">Ração</option>
-                <option value="Medicamentos/Veterinário">Saúde</option>
-                <option value="Acessórios e Instalações">Estrutura</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-          </div>
-          <button id="btn-limpar-filtros-fin" class="btn-secundario">
-            Limpar Filtros
-          </button>
+            <button id="btn-limpar-filtros-fin" class="btn-secundario">
+              Limpar Filtros
+            </button>
           </div>
         </div>
 
@@ -419,32 +474,51 @@
     </div>
     <!-- MODAL DE RELATÓRIOS -->
     <div id="modal-relatorios" class="escondido modal-overlay">
-        <div class="modal-content modal-largo">
-            <div class="modal-header">
-                <h3>📊 Relatórios</h3>
-                <button id="btn-fechar-relatorios" class="btn-fechar-modal">✖</button>
-            </div>
-            
-            <div class="opcoes-relatorio">
-                <button id="btn-rel-plantel" class="btn-acao">🐇 Relatório geral de coelhos</button>
-                <button id="btn-rel-reproducao" class="btn-acao">🍼 Desempenho reprodutivo</button>
-                <button id="btn-rel-financas" class="btn-acao">💰 Balanço Financeiro</button>
-                
-                <!-- RELATÓRIO INDIVIDUAL -->
-                <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
-                <h5 style="margin-bottom: 8px; color: #2c3e50; text-align: left;">🔍 Relatório de coelhos:</h5>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <select id="select-rel-coelho" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="">Carregando coelhos...</option>
-                    </select>
-                    <button id="btn-rel-individual" class="btn-acao" style="background-color: #8e44ad;">Gerar relatório do coelho</button>
-                </div>
-            </div>
-
-            <div id="area-resultado-relatorio">
-                <p style="color:#7f8c8d; text-align:center; margin-top:30px;">Selecione um relatório acima para gerar.</p>
-            </div>
+      <div class="modal-content modal-largo">
+        <div class="modal-header">
+          <h3>📊 Relatórios</h3>
+          <button id="btn-fechar-relatorios" class="btn-fechar-modal">✖</button>
         </div>
+
+        <div class="opcoes-relatorio">
+          <button id="btn-rel-plantel" class="btn-acao">
+            🐇 Relatório geral de coelhos
+          </button>
+          <button id="btn-rel-reproducao" class="btn-acao">
+            🍼 Desempenho reprodutivo
+          </button>
+          <button id="btn-rel-financas" class="btn-acao">
+            💰 Balanço Financeiro
+          </button>
+
+          <!-- RELATÓRIO INDIVIDUAL -->
+          <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0" />
+          <h5 style="margin-bottom: 8px; color: #2c3e50; text-align: left">
+            🔍 Relatório de coelhos:
+          </h5>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <select
+              id="select-rel-coelho"
+              style="padding: 10px; border-radius: 4px; border: 1px solid #ccc"
+            >
+              <option value="">Carregando coelhos...</option>
+            </select>
+            <button
+              id="btn-rel-individual"
+              class="btn-acao"
+              style="background-color: #8e44ad"
+            >
+              Gerar relatório do coelho
+            </button>
+          </div>
+        </div>
+
+        <div id="area-resultado-relatorio">
+          <p style="color: #7f8c8d; text-align: center; margin-top: 30px">
+            Selecione um relatório acima para gerar.
+          </p>
+        </div>
+      </div>
     </div>
     <nav class="menu-inferior" id="menu-inferior">
       <button id="tab-coelhos" class="aba-ativa">
@@ -482,48 +556,126 @@
     </div>
     <!--Modal de notas-->
     <div id="modal-notas" class="escondido modal-overlay">
-    <div class="modal-content" style="max-height: 85vh; min-height: 420px; display: flex; flex-direction: column;">
+      <div
+        class="modal-content"
+        style="
+          max-height: 85vh;
+          min-height: 420px;
+          display: flex;
+          flex-direction: column;
+        "
+      >
         <div class="modal-header">
-            <h3>📝 Bloco de Notas</h3>
-            <button id="btn-fechar-notas" class="btn-fechar-modal">✖</button>
+          <h3>📝 Bloco de Notas</h3>
+          <button id="btn-fechar-notas" class="btn-fechar-modal">✖</button>
         </div>
-        
-        <div <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1;">
-            <textarea id="texto-bloco-notas" placeholder="Carregando anotações do banco de dados..." style="width: 100%; height: 320px; min-height: 250px; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; resize: vertical; box-sizing: border-box; font-size: 15px; line-height: 1.4;"></textarea>
-            
-            <button id="btn-salvar-notas" class="btn-acao" style="background-color: #27ae60;">💾 Salvar alterações</button>
+
+        <div
+          style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1"
+        >
+          <textarea
+            id="texto-bloco-notas"
+            placeholder="Carregando anotações do banco de dados..."
+            style="
+              width: 100%;
+              height: 320px;
+              min-height: 250px;
+              padding: 12px;
+              border-radius: 8px;
+              border: 1px solid #ccc;
+              font-family: inherit;
+              resize: vertical;
+              box-sizing: border-box;
+              font-size: 15px;
+              line-height: 1.4;
+            "
+          ></textarea>
+
+          <button
+            id="btn-salvar-notas"
+            class="btn-acao"
+            style="background-color: #27ae60"
+          >
+            💾 Salvar alterações
+          </button>
         </div>
+      </div>
     </div>
-</div>
-<!-- MODAL DE AGENDAR NOTIFICAÇÃO -->
-<div id="modal-notificacao" class="escondido modal-overlay">
-    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+    <!-- MODAL DE AGENDAR NOTIFICAÇÃO -->
+    <div id="modal-notificacao" class="escondido modal-overlay">
+      <div class="modal-content" style="max-height: 85vh; overflow-y: auto">
         <div class="modal-header">
-            <h3>🔔 Lembretes e Notificações</h3>
-            <button id="btn-fechar-notificacao" class="btn-fechar-modal">✖</button>
+          <h3>🔔 Lembretes e Notificações</h3>
+          <button id="btn-fechar-notificacao" class="btn-fechar-modal">
+            ✖
+          </button>
         </div>
-        
+
         <!-- FORMULÁRIO DE NOVA NOTIFICAÇÃO -->
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-            <label style="font-weight: bold; font-size: 14px;">Novo Lembrete (máx. 240 car.):</label>
-            <textarea id="texto-notificacao" maxlength="240" placeholder="Ex: Vacinar ninhada da Luna..." style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit; resize: none;"></textarea>
-            <small id="contador-caracteres" style="text-align: right; color: #7f8c8d; font-size: 12px;">0/240</small>
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+          "
+        >
+          <label style="font-weight: bold; font-size: 14px"
+            >Novo Lembrete (máx. 240 car.):</label
+          >
+          <textarea
+            id="texto-notificacao"
+            maxlength="240"
+            placeholder="Ex: Vacinar ninhada da Luna..."
+            style="
+              width: 100%;
+              height: 80px;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid #ccc;
+              box-sizing: border-box;
+              font-family: inherit;
+              resize: none;
+            "
+          ></textarea>
+          <small
+            id="contador-caracteres"
+            style="text-align: right; color: #7f8c8d; font-size: 12px"
+            >0/240</small
+          >
 
-            <label style="font-weight: bold; font-size: 14px;">Data do Lembrete:</label>
-            <input type="date" id="data-notificacao" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+          <label style="font-weight: bold; font-size: 14px"
+            >Data do Lembrete:</label
+          >
+          <input
+            type="date"
+            id="data-notificacao"
+            style="padding: 10px; border-radius: 8px; border: 1px solid #ccc"
+          />
 
-            <button id="btn-salvar-notificacao" class="btn-acao" style="background-color: #27ae60; padding: 10px; font-weight: bold;">💾 Agendar Lembrete</button>
+          <button
+            id="btn-salvar-notificacao"
+            class="btn-acao"
+            style="background-color: #27ae60; padding: 10px; font-weight: bold"
+          >
+            💾 Agendar Lembrete
+          </button>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0" />
 
         <!-- LISTAGEM DE NOTIFICAÇÕES ATIVAS -->
-        <h4 style="margin-bottom: 10px; color: #2c3e50;">📋 Lembretes Agendados</h4>
-        <div id="lista-notificacoes-ativas" style="display: flex; flex-direction: column; gap: 10px;">
-            <p style="color: #7f8c8d; font-size: 14px;">Carregando lembretes...</p>
+        <h4 style="margin-bottom: 10px; color: #2c3e50">
+          📋 Lembretes Agendados
+        </h4>
+        <div
+          id="lista-notificacoes-ativas"
+          style="display: flex; flex-direction: column; gap: 10px"
+        >
+          <p style="color: #7f8c8d; font-size: 14px">Carregando lembretes...</p>
         </div>
+      </div>
     </div>
-</div>
 
     <script type="module" src="app.js"></script>
   </body>
