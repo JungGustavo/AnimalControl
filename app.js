@@ -15,6 +15,10 @@ import {
   getDoc,
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getMessaging,
+  getToken,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBAiMP11gBfJuWKdo7qyIwHSk7L6Bb0BZ4",
@@ -26,7 +30,262 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const menuInferior = document.querySelector('menu-inferior') || document.getElementById('menu-inferior'); 
+const messaging = getMessaging(app);
+const VAPID_KEY =
+  "BICLsuFpQ0bt6Hu44nWW4geizrGla7LGWZRlsnaaJ4LrlXmqsXKfNszDuMj1RCn-4lC3ABw0AxyrvwvKy0CE1JY";
+
+// --- MÓDULO DE NOTIFICAÇÕES ---
+const btnAbrirNotificacao = document.getElementById("btn-abrir-notificacao");
+const modalNotificacao = document.getElementById("modal-notificacao");
+const textoNotificacao = document.getElementById("texto-notificacao");
+const dataNotificacao = document.getElementById("data-notificacao");
+const contadorCaracteres = document.getElementById("contador-caracteres");
+const btnSalvarNotificacao = document.getElementById("btn-salvar-notificacao");
+const btnFecharNotificacao = document.getElementById("btn-fechar-notificacao");
+const listaNotificacoesEl = document.getElementById(
+  "lista-notificacoes-ativas",
+);
+const menuInferior =
+  document.querySelector("nav") || document.getElementById("menu-inferior");
+
+function configurarDataMinimaNotificacao() {
+  const campoData = document.getElementById("data-notificacao");
+  if (campoData) {
+    const hoje = new Date();
+    // Ajusta o fuso horário para pegar a data local exata no formato YYYY-MM-DD
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoje.getDate()).padStart(2, "0");
+
+    const dataHojeFormatada = `${ano}-${mes}-${dia}`;
+
+    // Define a data mínima que pode ser selecionada no calendário
+    campoData.min = dataHojeFormatada;
+  }
+}
+
+// 1. CONTADOR DE CARACTERES
+if (textoNotificacao && contadorCaracteres) {
+  textoNotificacao.addEventListener("input", () => {
+    contadorCaracteres.innerText = `${textoNotificacao.value.length}/240`;
+  });
+}
+
+// 2. PERMISSÃO DE NOTIFICAÇÃO
+async function solicitarPermissaoNotificacao() {
+  if ("Notification" in window) {
+    const permissao = await Notification.requestPermission();
+    return permissao === "granted";
+  }
+  return false;
+}
+
+// 3. CAMINHO DINÂMICO PARA SERVICE WORKER (Local x GitHub Pages)
+function obterCaminhoServiceWorker() {
+  const isGithubPages = window.location.hostname.includes("github.io");
+  return isGithubPages
+    ? "/AnimalControl/firebase-messaging-sw.js"
+    : "./firebase-messaging-sw.js";
+}
+
+// 4. OBTER TOKEN FCM
+async function obterTokenFCM() {
+  try {
+    const swPath = obterCaminhoServiceWorker();
+    const registration = await navigator.serviceWorker.register(swPath);
+
+    const tokenAtual = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+
+    return tokenAtual || null;
+  } catch (err) {
+    console.error("Erro ao obter Token FCM:", err);
+    return null;
+  }
+}
+
+// 5. AGENDAMENTO LOCAL
+function agendarNotificacaoLocal(mensagem, dataStr) {
+  const dataAlvo = new Date(dataStr + "T09:00:00");
+  const agora = new Date();
+  const tempoRestante = dataAlvo.getTime() - agora.getTime();
+
+  if (tempoRestante > 0) {
+    setTimeout(() => {
+      if (Notification.permission === "granted") {
+        new Notification("🐰 AnimalControl - Lembrete", {
+          body: mensagem,
+          icon: "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+        });
+      }
+    }, tempoRestante);
+  }
+}
+
+// 6. SALVAR NOTIFICAÇÃO (ÚNICO EVENTO DE CLIQUE)
+if (btnSalvarNotificacao) {
+  btnSalvarNotificacao.addEventListener("click", async () => {
+    const texto = textoNotificacao.value.trim();
+    const dataAlvo = dataNotificacao.value;
+
+    if (!texto || !dataAlvo) {
+      alert("Por favor, preencha a mensagem e a data.");
+      return;
+    }
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const [ano, mes, dia] = dataAlvo.split("-");
+    const dataSelecionada = new Date(ano, mes - 1, dia);
+
+    if (dataSelecionada < hoje) {
+      alert(
+        "❌ Não é possível agendar notificações para datas que já passaram!",
+      );
+      return;
+    }
+
+    const permissaoConcedida = await solicitarPermissaoNotificacao();
+    if (!permissaoConcedida) {
+      alert("Você precisa permitir as notificações para receber lembretes.");
+      return;
+    }
+
+    btnSalvarNotificacao.disabled = true;
+    btnSalvarNotificacao.innerText = "⏳ Agendando...";
+
+    try {
+      // Obtém o token FCM em background sem travar a execução caso falhe
+      const tokenDispositivo = await obterTokenFCM();
+
+      // Salva no Firestore (Apenas 1 chamada)
+      await addDoc(collection(db, "notificacoes"), {
+        mensagem: texto,
+        dataAgendada: dataAlvo,
+        tokenFcm: tokenDispositivo,
+        criadoEm: new Date(),
+        exibido: false,
+      });
+
+      agendarNotificacaoLocal(texto, dataAlvo);
+
+      alert("🔔 Lembrete agendado com sucesso!");
+
+      // Reseta os campos e atualiza a listagem
+      textoNotificacao.value = "";
+      dataNotificacao.value = "";
+      if (contadorCaracteres) contadorCaracteres.innerText = "0/240";
+
+      fecharModalNotificacao();
+    } catch (erro) {
+      console.error("Erro ao agendar notificação:", erro);
+      alert("Erro ao salvar a notificação no banco de dados.");
+    } finally {
+      btnSalvarNotificacao.disabled = false;
+      btnSalvarNotificacao.innerText = "💾 Salvar Lembrete";
+    }
+  });
+}
+
+// 7. ABRIR E FECHAR MODAL
+if (btnAbrirNotificacao) {
+  btnAbrirNotificacao.addEventListener("click", () => {
+    if (modalNotificacao) {
+      modalNotificacao.classList.remove("escondido");
+      if (menuInferior) menuInferior.classList.add("escondido");
+      {
+        configurarDataMinimaNotificacao();
+        carregarNotificacoesAtivas();
+      }
+    }
+  });
+}
+
+function fecharModalNotificacao() {
+  if (modalNotificacao) {
+    modalNotificacao.classList.add("escondido");
+    if (menuInferior) menuInferior.classList.remove("escondido");
+  }
+}
+
+if (btnFecharNotificacao) {
+  btnFecharNotificacao.addEventListener("click", fecharModalNotificacao);
+}
+
+// 8. LISTAGEM E EXCLUSÃO DE NOTIFICAÇÕES
+async function carregarNotificacoesAtivas() {
+  if (!listaNotificacoesEl) return;
+
+  listaNotificacoesEl.innerHTML =
+    '<p style="color: #7f8c8d; font-size: 14px;">Carregando...</p>';
+
+  try {
+    const q = query(
+      collection(db, "notificacoes"),
+      where("exibido", "==", false),
+      orderBy("dataAgendada", "asc"),
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      listaNotificacoesEl.innerHTML =
+        '<p style="color: #7f8c8d; font-size: 14px;">Nenhum lembrete pendente.</p>';
+      return;
+    }
+
+    listaNotificacoesEl.innerHTML = "";
+
+    snapshot.forEach((documento) => {
+      const notif = documento.data();
+      const id = documento.id;
+
+      const partesData = notif.dataAgendada.split("-");
+      const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+
+      const item = document.createElement("div");
+      item.className = "card-notificacao-ativa";
+      item.style.cssText = `
+        background: #f8f9fa;
+        border-left: 4px solid #3498db;
+        padding: 10px 12px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      `;
+
+      item.innerHTML = `
+        <div style="flex-grow: 1; padding-right: 10px;">
+          <strong style="display: block; font-size: 12px; color: #2980b9;">📅 ${dataFormatada}</strong>
+          <span style="font-size: 14px; color: #2c3e50; word-break: break-word;">${notif.mensagem}</span>
+        </div>
+        <button onclick="excluirNotificacao('${id}')" title="Excluir Lembrete" style="background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7;">🗑️</button>
+      `;
+
+      listaNotificacoesEl.appendChild(item);
+    });
+  } catch (erro) {
+    console.error("Erro ao carregar lista de notificações:", erro);
+    listaNotificacoesEl.innerHTML =
+      '<p style="color: #e74c3c; font-size: 13px;">Erro ao carregar lembretes.</p>';
+  }
+}
+
+window.excluirNotificacao = async function (id) {
+  if (confirm("Deseja cancelar este lembrete?")) {
+    try {
+      await deleteDoc(doc(db, "notificacoes", id));
+      carregarNotificacoesAtivas();
+    } catch (erro) {
+      console.error("Erro ao excluir notificação:", erro);
+      alert("Erro ao excluir lembrete.");
+    }
+  }
+};
 
 // --- NAVEGAÇÃO INTELIGENTE DE ABAS ---
 const abas = ["coelhos", "cobertura", "partos", "financeiro"];
@@ -261,33 +520,39 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 // MÓDULO 2: COBERTURA E AUTOMAÇÃO DE PARTOS
 // ==========================================
 function atualizarSelectsCobertura() {
-    const selFemea = document.getElementById('cobertura-femea');
-    const selMacho = document.getElementById('cobertura-macho');
-    const selRelCoelho = document.getElementById('select-rel-coelho'); // Novo select do relatório
-    
-    selFemea.innerHTML = '<option value="">Selecione a fêmea...</option>';
-    selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
-    if(selRelCoelho) selRelCoelho.innerHTML = '<option value="">Selecione um coelho...</option>';
-    
-    todosCoelhos.forEach(c => {
-        const nomeFormatado = `${c.nome} | #${c.numero || 'S/N'}`;
-        
-        // Preenche Machos e Fêmeas (ignorando óbitos para acasalamento)
-        if(c.status !== "Óbito") {
-            const optionF = document.createElement('option'); optionF.value = nomeFormatado; optionF.innerText = nomeFormatado;
-            const optionM = document.createElement('option'); optionM.value = nomeFormatado; optionM.innerText = nomeFormatado;
-            if(c.sexo === 'Fêmea') selFemea.appendChild(optionF);
-            if(c.sexo === 'Macho') selMacho.appendChild(optionM);
-        }
+  const selFemea = document.getElementById("cobertura-femea");
+  const selMacho = document.getElementById("cobertura-macho");
+  const selRelCoelho = document.getElementById("select-rel-coelho"); // Novo select do relatório
 
-        // Preenche o Relatório com TODOS os coelhos (incluindo óbitos, pois eles têm histórico)
-        if(selRelCoelho) {
-            const optionRel = document.createElement('option');
-            optionRel.value = c.id; // Salvamos o ID para buscar os dados completos
-            optionRel.innerText = nomeFormatado + (c.status === 'Óbito' ? ' (Óbito)' : '');
-            selRelCoelho.appendChild(optionRel);
-        }
-    });
+  selFemea.innerHTML = '<option value="">Selecione a fêmea...</option>';
+  selMacho.innerHTML = '<option value="">Selecione o macho...</option>';
+  if (selRelCoelho)
+    selRelCoelho.innerHTML = '<option value="">Selecione um coelho...</option>';
+
+  todosCoelhos.forEach((c) => {
+    const nomeFormatado = `${c.nome} | #${c.numero || "S/N"}`;
+
+    // Preenche Machos e Fêmeas (ignorando óbitos para acasalamento)
+    if (c.status !== "Óbito") {
+      const optionF = document.createElement("option");
+      optionF.value = nomeFormatado;
+      optionF.innerText = nomeFormatado;
+      const optionM = document.createElement("option");
+      optionM.value = nomeFormatado;
+      optionM.innerText = nomeFormatado;
+      if (c.sexo === "Fêmea") selFemea.appendChild(optionF);
+      if (c.sexo === "Macho") selMacho.appendChild(optionM);
+    }
+
+    // Preenche o Relatório com TODOS os coelhos (incluindo óbitos, pois eles têm histórico)
+    if (selRelCoelho) {
+      const optionRel = document.createElement("option");
+      optionRel.value = c.id; // Salvamos o ID para buscar os dados completos
+      optionRel.innerText =
+        nomeFormatado + (c.status === "Óbito" ? " (Óbito)" : "");
+      selRelCoelho.appendChild(optionRel);
+    }
+  });
 }
 // 1. Apenas salva a cobertura (sem gerar o parto ainda)
 formCobertura.addEventListener("submit", async (e) => {
@@ -854,7 +1119,7 @@ document
   .getElementById("btn-abrir-relatorios")
   .addEventListener("click", () => {
     modalRelatorios.classList.remove("escondido");
-    if (menuInferior) menuInferior.classList.add('escondido');
+    if (menuInferior) menuInferior.classList.add("escondido");
     areaRelatorio.innerHTML =
       '<p style="color:#7f8c8d; text-align:center; margin-top:30px;">Selecione um relatório acima.</p>';
   });
@@ -862,19 +1127,21 @@ document
   .getElementById("btn-fechar-relatorios")
   .addEventListener("click", () => {
     modalRelatorios.classList.add("escondido");
-    if (menuInferior) menuInferior.classList.remove('escondido');
+    if (menuInferior) menuInferior.classList.remove("escondido");
   });
 
-const modalNotas = document.getElementById('modal-notas');
-const campoNotas = document.getElementById('texto-bloco-notas');
-const btnFecharNotas = document.getElementById('btn-fechar-notas');
-const btnSalvarNotas = document.getElementById('btn-salvar-notas');
+const modalNotas = document.getElementById("modal-notas");
+const campoNotas = document.getElementById("texto-bloco-notas");
+const btnFecharNotas = document.getElementById("btn-fechar-notas");
+const btnSalvarNotas = document.getElementById("btn-salvar-notas");
 
 // Referência fixa do documento de notas no Firestore
 const docNotasRef = doc(db, "anotacoes", "bloco_geral");
 
 // 1. ABRIR NOTAS E BUSCAR DO FIRESTORE
-document.getElementById("btn-abrir-notas").addEventListener("click", async () => {
+document
+  .getElementById("btn-abrir-notas")
+  .addEventListener("click", async () => {
     modalNotas.classList.remove("escondido");
     if (menuInferior) menuInferior.classList.add("escondido");
 
@@ -883,65 +1150,65 @@ document.getElementById("btn-abrir-notas").addEventListener("click", async () =>
     campoNotas.disabled = true;
 
     try {
-        const docNotasRef = doc(db, "anotacoes", "bloco_geral");
-        
-        // Timeout de segurança caso a rede demore
-        const buscaPromise = getDoc(docNotasRef);
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Timeout")), 5000)
-        );
+      const docNotasRef = doc(db, "anotacoes", "bloco_geral");
 
-        const docSnap = await Promise.race([buscaPromise, timeoutPromise]);
+      // Timeout de segurança caso a rede demore
+      const buscaPromise = getDoc(docNotasRef);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 5000),
+      );
 
-        if (docSnap.exists()) {
-            campoNotas.value = docSnap.data().texto || "";
-        } else {
-            campoNotas.value = "";
-        }
-    } catch (error) {
-        console.error("Erro ao carregar notas:", error);
+      const docSnap = await Promise.race([buscaPromise, timeoutPromise]);
+
+      if (docSnap.exists()) {
+        campoNotas.value = docSnap.data().texto || "";
+      } else {
         campoNotas.value = "";
+      }
+    } catch (error) {
+      console.error("Erro ao carregar notas:", error);
+      campoNotas.value = "";
     } finally {
-        campoNotas.placeholder = "Escreva suas anotações aqui...";
-        campoNotas.disabled = false;
-        campoNotas.focus();
+      campoNotas.placeholder = "Escreva suas anotações aqui...";
+      campoNotas.disabled = false;
+      campoNotas.focus();
     }
-});
+  });
 
 // 2. FECHAR NOTAS
 function fecharModalNotas() {
-    modalNotas.classList.add("escondido");
-    if (menuInferior) menuInferior.classList.remove("escondido");
+  modalNotas.classList.add("escondido");
+  if (menuInferior) menuInferior.classList.remove("escondido");
 }
 
 if (btnFecharNotas) btnFecharNotas.addEventListener("click", fecharModalNotas);
 
 // 3. SALVAR NOTAS NO FIRESTORE
 if (btnSalvarNotas) {
-    btnSalvarNotas.addEventListener("click", async () => {
-        const texto = campoNotas.value;
-        
-        btnSalvarNotas.disabled = true;
-        btnSalvarNotas.innerText = "⏳ Salvando...";
+  btnSalvarNotas.addEventListener("click", async () => {
+    const texto = campoNotas.value;
 
-        try {
-            const docNotasRef = doc(db, "anotacoes", "bloco_geral");
-            await setDoc(docNotasRef, {
-                texto: texto,
-                ultimaAtualizacao: new Date()
-            });
+    btnSalvarNotas.disabled = true;
+    btnSalvarNotas.innerText = "⏳ Salvando...";
 
-            alert("📝 Anotações salvas com sucesso!");
-            fecharModalNotas();
-        } catch (error) {
-            console.error("Erro ao salvar nota:", error);
-            alert("❌ Erro ao salvar as anotações.");
-        } finally {
-            btnSalvarNotas.disabled = false;
-            btnSalvarNotas.innerText = "💾 Salvar no Firebase";
-        }
-    });
-} 
+    try {
+      const docNotasRef = doc(db, "anotacoes", "bloco_geral");
+      await setDoc(docNotasRef, {
+        texto: texto,
+        ultimaAtualizacao: new Date(),
+      });
+
+      alert("📝 Anotações salvas com sucesso!");
+      fecharModalNotas();
+    } catch (error) {
+      console.error("Erro ao salvar nota:", error);
+      alert("❌ Erro ao salvar as anotações.");
+    } finally {
+      btnSalvarNotas.disabled = false;
+      btnSalvarNotas.innerText = "💾 Salvar alterações";
+    }
+  });
+}
 
 // 1. RELATÓRIO DE PLANTEL
 document.getElementById("btn-rel-plantel").addEventListener("click", () => {
@@ -1038,74 +1305,81 @@ document.getElementById("btn-rel-financas").addEventListener("click", () => {
     `;
 });
 
-document.getElementById('btn-rel-individual').addEventListener('click', () => {
-    const idCoelho = document.getElementById('select-rel-coelho').value;
-    
-    if(!idCoelho) {
-        alert("Por favor, selecione um coelho na lista!");
-        return;
+document.getElementById("btn-rel-individual").addEventListener("click", () => {
+  const idCoelho = document.getElementById("select-rel-coelho").value;
+
+  if (!idCoelho) {
+    alert("Por favor, selecione um coelho na lista!");
+    return;
+  }
+
+  // Acha os dados completos do coelho
+  const coelho = todosCoelhos.find((c) => c.id === idCoelho);
+  const labelCoelho = `${coelho.nome} | #${coelho.numero || "S/N"}`;
+  const dataNascStr = coelho.nascimento
+    ? coelho.nascimento.split("-").reverse().join("/")
+    : "-";
+  const corStatus = coelho.status === "Óbito" ? "#e74c3c" : "#27ae60";
+
+  // Busca todos os partos em que este coelho foi o Pai ou a Mãe
+  const historicoPartos = todosPartos.filter(
+    (p) => p.femea === labelCoelho || p.macho === labelCoelho,
+  );
+
+  // Calcula totais reprodutivos
+  let totalVivos = 0,
+    totalMortos = 0,
+    totalDesmamados = 0;
+  historicoPartos.forEach((p) => {
+    if (p.status === "Desmame Concluído") {
+      totalVivos += p.vivos || 0;
+      totalMortos += p.mortos || 0;
+      totalDesmamados += p.desmamados || 0;
     }
+  });
 
-    // Acha os dados completos do coelho
-    const coelho = todosCoelhos.find(c => c.id === idCoelho);
-    const labelCoelho = `${coelho.nome} | #${coelho.numero || 'S/N'}`;
-    const dataNascStr = coelho.nascimento ? coelho.nascimento.split('-').reverse().join('/') : '-';
-    const corStatus = coelho.status === "Óbito" ? "#e74c3c" : "#27ae60";
+  // Monta a Linha do Tempo Visual do Histórico
+  let htmlCiclos = "";
+  if (historicoPartos.length > 0) {
+    historicoPartos.forEach((p) => {
+      const parceiro = p.femea === labelCoelho ? p.macho : p.femea;
+      let resumoCiclo = "";
+      let corCiclo = "#ccc";
 
-    // Busca todos os partos em que este coelho foi o Pai ou a Mãe
-    const historicoPartos = todosPartos.filter(p => p.femea === labelCoelho || p.macho === labelCoelho);
-    
-    // Calcula totais reprodutivos
-    let totalVivos = 0, totalMortos = 0, totalDesmamados = 0;
-    historicoPartos.forEach(p => {
-        if(p.status === "Desmame Concluído") {
-            totalVivos += (p.vivos || 0);
-            totalMortos += (p.mortos || 0);
-            totalDesmamados += (p.desmamados || 0);
-        }
-    });
+      if (p.status === "Desmame Concluído") {
+        corCiclo = "#8e44ad";
+        resumoCiclo = `✅ Vivos: <strong>${p.vivos}</strong> | Desmamados: <strong style="color:#27ae60;">${p.desmamados}</strong> (Média peso: ${p.pesoMedio || "-"}kg)`;
+      } else if (p.status === "Aguardando Nascimento") {
+        corCiclo = "#f39c12";
+        resumoCiclo = `⏳ Previsão de Parto: ${p.dataPrevistaParto.split("-").reverse().join("/")}`;
+      } else {
+        corCiclo = "#3498db";
+        resumoCiclo = `🍼 Amamentando | Nascidos: ${p.vivos}`;
+      }
 
-    // Monta a Linha do Tempo Visual do Histórico
-    let htmlCiclos = '';
-    if(historicoPartos.length > 0) {
-        historicoPartos.forEach(p => {
-            const parceiro = p.femea === labelCoelho ? p.macho : p.femea;
-            let resumoCiclo = "";
-            let corCiclo = "#ccc";
-
-            if (p.status === "Desmame Concluído") {
-                corCiclo = "#8e44ad";
-                resumoCiclo = `✅ Vivos: <strong>${p.vivos}</strong> | Desmamados: <strong style="color:#27ae60;">${p.desmamados}</strong> (Média peso: ${p.pesoMedio || '-'}kg)`;
-            } else if (p.status === "Aguardando Nascimento") {
-                corCiclo = "#f39c12";
-                resumoCiclo = `⏳ Previsão de Parto: ${p.dataPrevistaParto.split('-').reverse().join('/')}`;
-            } else {
-                corCiclo = "#3498db";
-                resumoCiclo = `🍼 Amamentando | Nascidos: ${p.vivos}`;
-            }
-
-            htmlCiclos += `
+      htmlCiclos += `
                 <div style="background:#fff; border-left:4px solid ${corCiclo}; padding:10px; margin-bottom:8px; border-radius:4px; font-size:13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <strong>Parceiro(a):</strong> ${parceiro} <br>
                     <strong>Status:</strong> ${p.status} <br>
                     <span style="display:inline-block; margin-top:5px;">${resumoCiclo}</span>
                 </div>
             `;
-        });
-    } else {
-        htmlCiclos = '<p style="color:#777; font-size:13px;">Nenhum ciclo reprodutivo registrado para este animal.</p>';
-    }
+    });
+  } else {
+    htmlCiclos =
+      '<p style="color:#777; font-size:13px;">Nenhum ciclo reprodutivo registrado para este animal.</p>';
+  }
 
-    // Desenha o Relatório Completo na Tela
-    areaRelatorio.innerHTML = `
+  // Desenha o Relatório Completo na Tela
+  areaRelatorio.innerHTML = `
         <h4 style="margin-bottom:10px; color:#8e44ad;">🔍 Dossiê: ${coelho.nome}</h4>
         
         <div style="background:#ecf0f1; padding:10px; border-radius:8px; margin-bottom:15px;">
-            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>ID:</span> <strong>#${coelho.numero || 'S/N'}</strong></div>
-            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Raça:</span> <strong>${coelho.raca || '-'}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>ID:</span> <strong>#${coelho.numero || "S/N"}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Raça:</span> <strong>${coelho.raca || "-"}</strong></div>
             <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Sexo:</span> <strong>${coelho.sexo}</strong></div>
             <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Nascimento:</span> <strong>${dataNascStr}</strong></div>
-            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Status:</span> <strong style="color:${corStatus};">${coelho.status || 'Vivo'}</strong></div>
+            <div class="linha-relatorio" style="border:none; padding:3px 0;"><span>Status:</span> <strong style="color:${corStatus};">${coelho.status || "Vivo"}</strong></div>
         </div>
 
         <h5 style="margin-bottom:10px; color:#2c3e50;">📊 Desempenho Reprodutivo</h5>
@@ -1119,41 +1393,70 @@ document.getElementById('btn-rel-individual').addEventListener('click', () => {
 });
 
 //filtro coelhos
-const btnToggleFiltros = document.getElementById('btn-toggle-filtros');
-const areaFiltros = document.getElementById('area-filtros-coelhos');
+const btnToggleFiltros = document.getElementById("btn-toggle-filtros");
+const areaFiltros = document.getElementById("area-filtros-coelhos");
 
-btnToggleFiltros.addEventListener('click', () => {
-    if (areaFiltros.classList.contains('escondido')) {
-        areaFiltros.classList.remove('escondido');
-        btnToggleFiltros.innerHTML = '⬆️ Ocultar Filtros';
-        btnToggleFiltros.style.backgroundColor = '#f1f2f6'; // Fica amarelado pra destacar que o filtro está ativo
-    } else {
-        areaFiltros.classList.add('escondido');
-        btnToggleFiltros.innerHTML = '🔍 Mostrar Filtros';
-        btnToggleFiltros.style.backgroundColor = '#f1f2f6'; // Volta a cor normal
-    }
+btnToggleFiltros.addEventListener("click", () => {
+  if (areaFiltros.classList.contains("escondido")) {
+    areaFiltros.classList.remove("escondido");
+    btnToggleFiltros.innerHTML = "⬆️ Ocultar Filtros";
+    btnToggleFiltros.style.backgroundColor = "#f1f2f6"; // Fica amarelado pra destacar que o filtro está ativo
+  } else {
+    areaFiltros.classList.add("escondido");
+    btnToggleFiltros.innerHTML = "🔍 Mostrar Filtros";
+    btnToggleFiltros.style.backgroundColor = "#f1f2f6"; // Volta a cor normal
+  }
 });
 
 //filtro financeiro
-const btnToggleFiltrosFinanceiro = document.getElementById('btn-toggle-filtros-financeiro');
-const areaFiltrosFinanceiro = document.getElementById('area-filtros-financeiro');
+const btnToggleFiltrosFinanceiro = document.getElementById(
+  "btn-toggle-filtros-financeiro",
+);
+const areaFiltrosFinanceiro = document.getElementById(
+  "area-filtros-financeiro",
+);
 
-btnToggleFiltrosFinanceiro.addEventListener('click', () => {
-    if (areaFiltrosFinanceiro.classList.contains('escondido')) {
-        areaFiltrosFinanceiro.classList.remove('escondido');
-        btnToggleFiltrosFinanceiro.innerHTML = '⬆️ Ocultar Filtros';
-        btnToggleFiltrosFinanceiro.style.backgroundColor = '#f1f2f6'; // Fica amarelado pra destacar que o filtro está ativo
-    } else {
-        areaFiltrosFinanceiro.classList.add('escondido');
-        btnToggleFiltrosFinanceiro.innerHTML = '🔍 Mostrar Filtros';
-        btnToggleFiltrosFinanceiro.style.backgroundColor = '#f1f2f6'; // Volta a cor normal
-    }
+btnToggleFiltrosFinanceiro.addEventListener("click", () => {
+  if (areaFiltrosFinanceiro.classList.contains("escondido")) {
+    areaFiltrosFinanceiro.classList.remove("escondido");
+    btnToggleFiltrosFinanceiro.innerHTML = "⬆️ Ocultar Filtros";
+    btnToggleFiltrosFinanceiro.style.backgroundColor = "#f1f2f6"; // Fica amarelado pra destacar que o filtro está ativo
+  } else {
+    areaFiltrosFinanceiro.classList.add("escondido");
+    btnToggleFiltrosFinanceiro.innerHTML = "🔍 Mostrar Filtros";
+    btnToggleFiltrosFinanceiro.style.backgroundColor = "#f1f2f6"; // Volta a cor normal
+  }
 });
 
+// Checa notificações pendentes salvas no Firestore quando o usuário abre o app
+async function checarNotificacoesPendentes() {
+  const hojeStr = new Date().toISOString().split("T")[0];
 
+  // Busca notificações cuja data é igual ou menor que hoje e ainda não foram exibidas
+  const q = query(
+    collection(db, "notificacoes"),
+    where("dataAgendada", "<=", hojeStr),
+    where("exibido", "==", false),
+  );
+
+  const snapshot = await getDocs(q);
+  snapshot.forEach(async (docSnap) => {
+    const notif = docSnap.data();
+
+    if (Notification.permission === "granted") {
+      new Notification("🐰 Lembrete Pendente", {
+        body: notif.mensagem,
+      });
+    }
+
+    // Marca como exibido no Firestore para não repetir
+    await updateDoc(doc(db, "notificacoes", docSnap.id), { exibido: true });
+  });
+}
 
 // Inicia as leituras
 lerCoelhos();
 lerCoberturas();
 lerPartos();
 lerFinanceiro();
+checarNotificacoesPendentes();

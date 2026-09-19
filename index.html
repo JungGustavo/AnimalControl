@@ -12,6 +12,9 @@
             <button id="btn-abrir-notas" class="btn-relatorios" title="Abrir notas">
                 📝 <span class="texto-oculto-mobile">Notas</span>
             </button>
+            <button id="btn-abrir-notificacao" class="btn-relatorios" title="Notificações">
+                🔔 <span class="texto-oculto-mobile">Notificações</span>
+            </button>
             </div>
             
         </div>
@@ -488,7 +491,36 @@
         <div <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1;">
             <textarea id="texto-bloco-notas" placeholder="Carregando anotações do banco de dados..." style="width: 100%; height: 320px; min-height: 250px; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; resize: vertical; box-sizing: border-box; font-size: 15px; line-height: 1.4;"></textarea>
             
-            <button id="btn-salvar-notas" class="btn-acao" style="background-color: #27ae60;">💾 Salvar no Firebase</button>
+            <button id="btn-salvar-notas" class="btn-acao" style="background-color: #27ae60;">💾 Salvar alterações</button>
+        </div>
+    </div>
+</div>
+<!-- MODAL DE AGENDAR NOTIFICAÇÃO -->
+<div id="modal-notificacao" class="escondido modal-overlay">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3>🔔 Lembretes e Notificações</h3>
+            <button id="btn-fechar-notificacao" class="btn-fechar-modal">✖</button>
+        </div>
+        
+        <!-- FORMULÁRIO DE NOVA NOTIFICAÇÃO -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            <label style="font-weight: bold; font-size: 14px;">Novo Lembrete (máx. 240 car.):</label>
+            <textarea id="texto-notificacao" maxlength="240" placeholder="Ex: Vacinar ninhada da Luna..." style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit; resize: none;"></textarea>
+            <small id="contador-caracteres" style="text-align: right; color: #7f8c8d; font-size: 12px;">0/240</small>
+
+            <label style="font-weight: bold; font-size: 14px;">Data do Lembrete:</label>
+            <input type="date" id="data-notificacao" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+
+            <button id="btn-salvar-notificacao" class="btn-acao" style="background-color: #27ae60; padding: 10px; font-weight: bold;">💾 Agendar Lembrete</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+        <!-- LISTAGEM DE NOTIFICAÇÕES ATIVAS -->
+        <h4 style="margin-bottom: 10px; color: #2c3e50;">📋 Lembretes Agendados</h4>
+        <div id="lista-notificacoes-ativas" style="display: flex; flex-direction: column; gap: 10px;">
+            <p style="color: #7f8c8d; font-size: 14px;">Carregando lembretes...</p>
         </div>
     </div>
 </div>

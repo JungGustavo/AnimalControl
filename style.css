@@ -69,7 +69,6 @@ button:hover {
   background-color: #2980b9;
 }
 
-
 .lista-container {
   margin-top: 30px;
   border-top: 2px solid #f0f0f0;
@@ -298,17 +297,17 @@ select:focus {
 }
 
 .btn-round {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 25px !important;          /* Largura fixa */
-    height: 25px;         /* Altura igual à largura para formar um círculo */
-    border-radius: 50%;   /* Transforma o retângulo num círculo perfeito */
-    font-size: 21px;      /* Tamanho do sinal de + */
-    font-weight: bold;
-    padding: 0;
-    margin-left: auto;    /* Joga o botão completamente para a direita (caso esteja num container flex) */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px !important; /* Largura fixa */
+  height: 25px; /* Altura igual à largura para formar um círculo */
+  border-radius: 50%; /* Transforma o retângulo num círculo perfeito */
+  font-size: 21px; /* Tamanho do sinal de + */
+  font-weight: bold;
+  padding: 0;
+  margin-left: auto; /* Joga o botão completamente para a direita (caso esteja num container flex) */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .menu-superior button.aba-ativa {
@@ -317,81 +316,78 @@ select:focus {
 }
 
 .cartao-cobertura {
-    position: relative; /* Mantém a lixeira presa ao canto do cartão */
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    background: #f7edf5;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border-left: 4px solid #e84393; /* Detalhe rosa lateral elegante */
+  position: relative; /* Mantém a lixeira presa ao canto do cartão */
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background: #f7edf5;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #e84393; /* Detalhe rosa lateral elegante */
 }
 
 .cartao-cobertura .btn-mini-excluir {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    padding: 5px;
-    color: #7f8c8d;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
-    text-align: right;
-    width: 40px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 5px;
+  color: #7f8c8d;
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
+  text-align: right;
+  width: 40px;
 }
 
 .cartao-cobertura .info-acasalamento,
-.cartao-cobertura > strong, 
+.cartao-cobertura > strong,
 .cartao-cobertura > div {
-    margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 /* Garante espaçamento entre as linhas de texto do cartão */
-.cartao-cobertura span, 
+.cartao-cobertura span,
 .cartao-cobertura strong {
-    display: block;
-    margin-bottom: 5px;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .cartao-cobertura button:not(.btn-mini-excluir) {
-    width: 100%;
-    margin-top: 10px;
-    padding: 12px;
-    font-size: 15px;
-    font-weight: bold;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
 }
-
 
 /* Lixeira perfeitamente no canto superior direito */
 .btn-mini-excluir {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 5px;
-    float: none; /* Remove o float antigo que causava o erro visual */
-    color: #7f8c8d;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  float: none; /* Remove o float antigo que causava o erro visual */
+  color: #7f8c8d;
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
 }
 
-
-
 .btn-mini-excluir:hover {
-    transform: scale(1.15);
-    color: #e74c3c;
+  transform: scale(1.15);
+  color: #e74c3c;
 }
 
 .escondido {
@@ -399,18 +395,18 @@ select:focus {
 }
 
 .acoes-topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center; /* Alinha o título e o botão verticalmente ao centro */
-    margin-bottom: 10px;
-    gap: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Alinha o título e o botão verticalmente ao centro */
+  margin-bottom: 10px;
+  gap: 15px;
 }
 
 .acoes-topo h2 {
-    margin: 0;
-    font-size: 20px; /* Reduzimos um pouco para evitar quebras de linha */
-    line-height: 1.2;
-    color: #2c3e50;
+  margin: 0;
+  font-size: 20px; /* Reduzimos um pouco para evitar quebras de linha */
+  line-height: 1.2;
+  color: #2c3e50;
 }
 
 .btn-acao {
@@ -451,36 +447,36 @@ select:focus {
 }
 
 .cartao-parto {
-    position: relative !important; /* Obrigatório para prender a lixeira dentro do cartão */
-    display: flex;
-    flex-direction: column;
-    padding: 15px 15px 20px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  position: relative !important; /* Obrigatório para prender a lixeira dentro do cartão */
+  display: flex;
+  flex-direction: column;
+  padding: 15px 15px 20px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .cartao-parto .btn-mini-excluir {
-    position: absolute !important;
-    top: 12px !important;
-    right: 12px !important;
-    background: none !important;
-    border: none !important;
-    font-size: 22px !important;
-    cursor: pointer !important;
-    padding: 5px !important;
-    color: #7f8c8d !important;
-    float: none !important;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
-    text-align: right;
-    width: 40px;
-} 
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  background: none !important;
+  border: none !important;
+  font-size: 22px !important;
+  cursor: pointer !important;
+  padding: 5px !important;
+  color: #7f8c8d !important;
+  float: none !important;
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
+  text-align: right;
+  width: 40px;
+}
 
 .cartao-parto .btn-mini-excluir:hover {
-    color:red;
+  color: red;
 }
 
 .cartao-parto h3 {
@@ -867,81 +863,97 @@ body {
 
 /* --- CABEÇALHO E RELATÓRIOS --- */
 .header-topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #ecf0f1;
-    gap: 15px; /* Mantém um espaço seguro entre o título e o botão */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ecf0f1;
+  gap: 15px; /* Mantém um espaço seguro entre o título e o botão */
 }
 
 .header-topo h1 {
-    margin: 0;
-    font-size: 22px; 
-    color: #2c3e50;
-    white-space: nowrap; /* Mantém numa linha só, sem colocar os pontinhos (...) */
+  margin: 0;
+  font-size: 22px;
+  color: #2c3e50;
+  white-space: nowrap; /* Mantém numa linha só, sem colocar os pontinhos (...) */
 }
 
-.div-menu-superior{
+.div-menu-superior {
   display: flex;
 }
 
 #btn-abrir-relatorios {
-    background: transparent; /* Remove o fundo escuro */
-    border: none;
-    box-shadow: none; /* Remove a sombra */
-    padding: 10px; /* Cria uma área de clique invisível e confortável para o dedo */
-    font-size: 26px; /* Deixa o emoji 📊 bem maior */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
-    position: relative !important; 
-  justify-content: right !important;
-  }
-
-#btn-abrir-notas{
   background: transparent; /* Remove o fundo escuro */
-    border: none;
-    box-shadow: none; /* Remove a sombra */
-    padding: 10px; /* Cria uma área de clique invisível e confortável para o dedo */
-    font-size: 26px; /* Deixa o emoji 📊 bem maior */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
-    position: relative !important; 
+  border: none;
+  box-shadow: none; /* Remove a sombra */
+  padding: 10px; /* Cria uma área de clique invisível e confortável para o dedo */
+  font-size: 26px; /* Deixa o emoji 📊 bem maior */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
+  position: relative !important;
   justify-content: right !important;
 }
 
+#btn-abrir-notas {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+  -webkit-tap-highlight-color: transparent;
+  position: relative !important;
+  justify-content: right !important;
+}
+
+#btn-abrir-notificacao {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+  -webkit-tap-highlight-color: transparent;
+  position: relative !important;
+  justify-content: right !important;
+}
 
 /* Oculta o texto permanentemente para manter o visual limpo */
 .texto-oculto-mobile {
-    display: none;
+  display: none;
 }
 
 /* MÁGICA PARA CELULARES */
 /* Se a tela for menor que 450px (celulares), esconde o texto e ajusta o botão */
 @media (max-width: 450px) {
-    .texto-oculto-mobile {
-        display: none;
-    }
-    
-    #btn-abrir-relatorios {
-        padding: 2px; /* Deixa o botão quadradinho */
-        font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
-    }
-    #btn-abrir-notas{
-        padding: 2px; /* Deixa o botão quadradinho */
-        font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
-    }
+  .texto-oculto-mobile {
+    display: none;
+  }
+
+  #btn-abrir-relatorios {
+    padding: 2px; /* Deixa o botão quadradinho */
+    font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
+  }
+  #btn-abrir-notas {
+    padding: 2px; /* Deixa o botão quadradinho */
+    font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
+  }
 }
 
 .modal-largo {
@@ -953,51 +965,51 @@ body {
 }
 
 .modal-content {
-    position: relative; 
+  position: relative;
 }
 
 /* 2. Cabeçalho limpo para centrar apenas o título */
 .modal-header {
-    display: flex;
-    justify-content: center; 
-    align-items: center;
-    margin-bottom: 15px;
-    /* Adicionamos 40px de espaço na esquerda e direita para proteger o X */
-    padding: 0px 40px 10px 40px; 
-    border-bottom: 1px solid #eee;
-    width: 100%;
-    box-sizing: border-box; /* Garante que o padding não alarga a caixa para fora do ecrã */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  /* Adicionamos 40px de espaço na esquerda e direita para proteger o X */
+  padding: 0px 40px 10px 40px;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+  box-sizing: border-box; /* Garante que o padding não alarga a caixa para fora do ecrã */
 }
 
 .modal-header h3 {
-    margin: 0;
-    color: #2c3e50;
-    text-align: center;
+  margin: 0;
+  color: #2c3e50;
+  text-align: center;
 }
 
 /* 3. O X ancorado de forma absoluta no canto superior direito */
 .btn-fechar-modal {
-    position: absolute;
-    top: 5px;   /* Distância do topo da caixa branca */
-    right: 5px; /* Distância da lateral direita da caixa branca */
-    background: none;
-    border: none;
-    font-size: 22px; /* Tamanho confortável para o toque */
-    color: #e74c3c;
-    cursor: pointer;
-    padding: 5px;
-    line-height: 1;
-    z-index: 10; /* Garante que fica sempre por cima */
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
-    width: 40px;
+  position: absolute;
+  top: 5px; /* Distância do topo da caixa branca */
+  right: 5px; /* Distância da lateral direita da caixa branca */
+  background: none;
+  border: none;
+  font-size: 22px; /* Tamanho confortável para o toque */
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  z-index: 10; /* Garante que fica sempre por cima */
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
+  width: 40px;
 }
 
 .btn-fechar-modal:hover {
-    transform: scale(1.15);
-    background-color: none;
-    background: none;
+  transform: scale(1.15);
+  background-color: none;
+  background: none;
 }
 
 .opcoes-relatorio {
@@ -1027,25 +1039,25 @@ body {
 }
 
 .btn-toggle-filtros {
-    background-color: #f1f2f6;
-    color: #2c3e50;
-    border: 1px solid #ced6e0;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    transition: transform 0.2s ease;
-    transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
-    -webkit-tap-highlight-color: transparent;
+  background-color: #f1f2f6;
+  color: #2c3e50;
+  border: 1px solid #ced6e0;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease;
+  transform-origin: center center; /* Garante que o zoom cresce perfeitamente a partir do meio */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-toggle-filtros:hover {
-    background-color: #dfe4ea;
+  background-color: #dfe4ea;
 }
