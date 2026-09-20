@@ -921,7 +921,7 @@ body {
   background: transparent;
   border: none;
   box-shadow: none;
-  padding: 10px;
+  padding: 2px;
   font-size: 26px;
   cursor: pointer;
   display: flex;
@@ -951,6 +951,10 @@ body {
     font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
   }
   #btn-abrir-notas {
+    padding: 2px; /* Deixa o botão quadradinho */
+    font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
+  }
+  #btn-abrir-notificacao {
     padding: 2px; /* Deixa o botão quadradinho */
     font-size: 18px; /* Aumenta o emoji 📊 para facilitar o clique */
   }
